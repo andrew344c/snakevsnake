@@ -1,5 +1,5 @@
-# Snake V Snake
+# **Snake V Snake**
 ## APCS Final Project
-### By Andrew Chiang, Richard Cao, Soma Tummala
+## By Andrew Chiang, Richard Cao, Soma Tummala
 
 
