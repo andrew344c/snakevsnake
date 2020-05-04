@@ -23,7 +23,7 @@ public class GamePanel extends JPanel implements ActionListener {
     private CellView[][] gridWindow;
     private Snake player;
     private boolean multiplayer;
-    private final int DELAY = 250;
+    private final int DELAY = 125;
     private Timer timer;
 
     public GamePanel(int rows, int cols, boolean multiplayer) {     //multiplayer set to boolean temp change later
@@ -107,7 +107,6 @@ public class GamePanel extends JPanel implements ActionListener {
             // since we need to get updates from the other players first
             if (!player.getHead().hasSnake()) {
                 player.getHead().setSnake(true);
-                System.out.println(player.getHead());
                 if (!grid.hasFood()) {
                     changedLocations.add(grid.generateFood());     //Food generation will happen server-side
                 }
@@ -137,7 +136,6 @@ public class GamePanel extends JPanel implements ActionListener {
     private class ControllerAdapter extends KeyAdapter {
         @Override
         public void keyPressed(KeyEvent e) {
-            System.out.println("Key pressed " + e.getKeyChar());
             player.keyPressed(e);
         }
     }
