@@ -116,8 +116,6 @@ public class GamePanel extends JPanel implements ActionListener {
             }
         }
 
-        System.out.println(grid.toString());
-        System.out.println(changedLocations);
         updateGuiGrid(changedLocations);
     }
 
