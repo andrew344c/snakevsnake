@@ -1,10 +1,12 @@
-import java.awt.Color;
+package GameComponents;
+
+import java.io.Serializable;
 
 /**
  * Simple struct representing a cell in the grid
  * @author Andrew
  */
-public class Cell {
+public class Cell implements Serializable {
 
     private boolean food;
     private boolean snake;

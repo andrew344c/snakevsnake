@@ -1,3 +1,5 @@
+package GameComponents;
+
 import java.util.*;
 
 /**
@@ -23,6 +25,14 @@ public class Grid {
 
     public Cell at(int x, int y) {
         return grid[y][x];
+    }
+
+    public int getRows() {
+        return grid.length;
+    }
+
+    public int getCols() {
+        return grid[0].length;
     }
 
     public boolean inGrid(int x, int y) {

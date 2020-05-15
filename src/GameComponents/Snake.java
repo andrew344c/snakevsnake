@@ -1,3 +1,5 @@
+package GameComponents;
+
 import java.util.*;
 import java.awt.event.*;
 
@@ -9,13 +11,14 @@ import java.awt.event.*;
 public class Snake {
 
     private Grid grid;
-    private LinkedList<Cell> body; //Cell is deliberately not used
+    private LinkedList<Cell> body; //Game.Cell is deliberately not used
     private int dx;
     private int dy;
+    private boolean choseDirection;
 
     /**
      *
-     * Snake Constructor
+     * Game.Snake Constructor
      * Initializes body with snake of len 1, dx, dy
      *
      * @param head of snake
@@ -25,6 +28,7 @@ public class Snake {
         body = new LinkedList<Cell>();
         body.addFirst(head);
         dx = dy = 0;
+        choseDirection = false;
     }
 
     public Cell getHead() {
@@ -46,7 +50,8 @@ public class Snake {
      * Note: The 0th item (if there is one) will always be the new head
      * The arraylist will only be of size 0, 1, or 2 (Start: No movement, Eaten: Tail stays same, Normal: Tail and head change)
      */
-    public ArrayList<Cell> update() throws IndexOutOfBoundsException {
+    public ArrayList<Cell> update() throws SnakeOutOfBoundsException {
+        choseDirection = false;
         ArrayList<Cell> changedLocations = new ArrayList<Cell>();
         if (!isMoving()) {
             return changedLocations;
@@ -55,7 +60,7 @@ public class Snake {
         int newX = originalHead.getX() + dx;
         int newY = originalHead.getY() + dy;
         if (!grid.inGrid(newX, newY)) {
-            throw new IndexOutOfBoundsException();
+            throw new SnakeOutOfBoundsException();
         }
 
         // i hate this might change later
@@ -84,6 +89,9 @@ public class Snake {
      * @param e KeyEvent of Key Pressed
      */
     public void keyPressed(KeyEvent e) {
+        if (choseDirection) {
+            return;
+        }
         int keyCode = e.getKeyCode();
         if (keyCode == KeyEvent.VK_UP) {
             if (body.size() == 1 || dy == 0) {  //Will only change that direction if moving in opposite axis (otherwise will collide in self or will be same direction)
@@ -106,6 +114,20 @@ public class Snake {
                 dy = 0;
             }
         }
+        choseDirection = true;
+    }
+
+    /**
+     * Returns the whole body of the snake, for when the snake dies, directly updates local grid
+     * @return Cells that was of the snake and need to be updated to now be empty
+     */
+    public ArrayList<Cell> killSnake() {
+        ArrayList<Cell> update = new ArrayList<Cell>();
+        for (Cell cell: body) {
+            cell.setSnake(false);
+            update.add(cell);
+        }
+        return update;
     }
 
 

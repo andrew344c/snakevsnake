@@ -1,4 +1,4 @@
-# **Snake V Snake**
+# **GameComponents.Snake V GameComponents.Snake**
 ### APCS Final Project
 
 
