@@ -1,5 +1,6 @@
 package GameComponents;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -9,10 +10,9 @@ import java.util.*;
  *
  * @author Andrew
  */
-public class Grid {
+public class Grid implements Serializable {
 
     private Cell[][] grid;
-    private boolean hasFood;
 
     public Grid(int rows, int cols) {
         grid = new Cell[rows][cols];
@@ -54,14 +54,6 @@ public class Grid {
         grid[cell.getY()][cell.getX()] = cell;
     }
 
-    public boolean hasFood() {
-        return hasFood;
-    }
-
-    public void setHasFood(boolean hasFood) {
-        this.hasFood = hasFood;
-    }
-
     /**
      * For now just a naive implementation of generating food by just searching through whole grid for
      * all free locations and then randomly picking one of those free locations
@@ -77,7 +69,6 @@ public class Grid {
         }
         Cell chosenCell = possibleCells.get(new Random().nextInt(possibleCells.size()));
         chosenCell.setFood(true);
-        hasFood = true;
         return chosenCell;
     }
 

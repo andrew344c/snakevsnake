@@ -6,6 +6,8 @@ import Networking.SocketInexistentException;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Main handler for game
@@ -22,8 +24,6 @@ public class Game {
 
     private final String LOST_SIGNAL = "[S]LOST";
     private final String CONTINUE_SIGNAL = "[S]CONTINUE";
-
-    private final Object lock = new Object();
 
     /**
      * Single-player constructor
@@ -47,7 +47,7 @@ public class Game {
 
     public Game(String ip, int port) {
         server = new ClientService(ip, port);
-        server.setLock(lock);
+        server.setLock(this);
         Object[] snakeAndGridAndUpdate = server.initializeGame();    //blocking
         grid = (Grid)snakeAndGridAndUpdate[1];
         player = new Snake((Cell)snakeAndGridAndUpdate[0], grid);
@@ -79,6 +79,12 @@ public class Game {
 
         // Sends and updates cell info to/from server
         if (server != null) {
+            //sketchy dush stuff
+            if (player.isMoving() && player.getHead().hasSnake()) {
+                updatedCells = player.killSnake();
+                lost = true;
+            }
+
             if (lost) {
                 try {
                     server.send(LOST_SIGNAL);
@@ -94,6 +100,7 @@ public class Game {
             }else {
                 //sketchy dush
                 //sending "projection" of head and then changing back
+
                 player.getHead().setSnake(true);
                 try {
                     server.send(updatedCells);
@@ -103,9 +110,10 @@ public class Game {
                 player.getHead().setSnake(false);
             }
 
+            // will cause a bug for single player server where forever blocks, but if server theres always gonna be more than 1
             if (server.getUpdate() == null) {
-                synchronized (lock) {
-                    lock.wait();
+                synchronized (this) {
+                    this.wait();
                 }
             }
 
@@ -128,11 +136,13 @@ public class Game {
             if (player.isMoving()) {
                 if (!player.getHead().hasSnake()) {
                     player.getHead().setSnake(true);
-                    if (!grid.hasFood()) {
+                    if (player.ate) {
                         food = grid.generateFood();
+                        player.ate = false;
                         updatedCells.add(food);
                     }
                 } else {
+                    updatedCells = player.killSnake();
                     lost = true;
                 }
             }
@@ -156,7 +166,7 @@ public class Game {
         if (server != null) {
             if (food != null) {
                 try {
-                    server.send(food);
+                    server.send(new ArrayList<Cell>(Collections.singletonList(food)));
                 } catch (IOException e) {
                     throw new SocketInexistentException(server.IP, server.PORT);
                 }
@@ -169,8 +179,8 @@ public class Game {
             }
 
             if (server.getUpdate() == null) {
-                synchronized (lock) {
-                    lock.wait();
+                synchronized (this) {
+                    this.wait();
                 }
             }
 
@@ -191,5 +201,9 @@ public class Game {
 
     public int getCols() {
         return grid.getCols();
+    }
+
+    public synchronized void ready() {
+        this.notify();
     }
 }

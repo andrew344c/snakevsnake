@@ -25,20 +25,17 @@ public class ClientService implements Runnable {
     private final static String TYPE_CHAT = "[C]";
     private final static String TYPE_SPECIAL = "[S]";
 
-    private Object lock;
-
     public ClientService(String ip, int port) {
         IP = ip;
         PORT = port;
         try {
             server = new Socket(IP, PORT);
-            in = new ObjectInputStream(server.getInputStream());
             out = new ObjectOutputStream(server.getOutputStream());
+            in = new ObjectInputStream(server.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
         update = null;
-        initializeGame();
     }
 
     public Object[] initializeGame() {
@@ -55,6 +52,7 @@ public class ClientService implements Runnable {
 
     // add in some way to confirm that cell has been sent
     public void send(Object obj) throws IOException {
+        System.out.println(obj.toString());
         out.writeObject(obj);
     }
 
@@ -62,8 +60,8 @@ public class ClientService implements Runnable {
         return update;
     }
 
-    public void setLock(Object lock) {
-        this.lock = lock;
+    public void setLock(Game lock) {
+        game = lock;
     }
 
     @Override
@@ -82,7 +80,7 @@ public class ClientService implements Runnable {
                     }
                 }else if (obj instanceof ArrayList) {
                     update = (ArrayList<Cell>)obj;
-                    lock.notify();
+                    game.ready();
                 }
             }
         } catch (IOException | ClassNotFoundException e) {

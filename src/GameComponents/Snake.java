@@ -15,6 +15,8 @@ public class Snake {
     private int dx;
     private int dy;
     private boolean choseDirection;
+    public boolean ate;
+    public Cell previousTail; //hacky stuff
 
     /**
      *
@@ -29,6 +31,7 @@ public class Snake {
         body.addFirst(head);
         dx = dy = 0;
         choseDirection = false;
+        ate = false;
     }
 
     public Cell getHead() {
@@ -70,9 +73,10 @@ public class Snake {
 
         if (newHead.hasFood()) {
             newHead.setFood(false);
-            grid.setHasFood(false);
+            ate = true;
         }else {
             Cell oldTail = body.removeLast();
+            previousTail = oldTail;
             oldTail.setSnake(false);
             changedLocations.add(oldTail);
         }
@@ -127,6 +131,7 @@ public class Snake {
             cell.setSnake(false);
             update.add(cell);
         }
+        update.add(previousTail);
         return update;
     }
 

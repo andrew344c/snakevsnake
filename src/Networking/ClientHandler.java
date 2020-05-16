@@ -16,7 +16,7 @@ import java.util.ArrayList;
  * @author Andrew
  */
 public class ClientHandler implements Runnable {
-    private Socket client;
+    public Socket client;
     private ObjectInputStream in;
     private ObjectOutputStream out;
     private ServerService server;
@@ -28,11 +28,12 @@ public class ClientHandler implements Runnable {
     public ClientHandler(Socket client, ServerService server) throws IOException {
         this.client = client;
         this.server = server;
-        in = new ObjectInputStream(client.getInputStream());
         out = new ObjectOutputStream(client.getOutputStream());
+        in = new ObjectInputStream(client.getInputStream());
     }
 
     public void send(Object obj) {
+        System.out.println(obj.toString());
         try {
             out.writeObject(obj);
         } catch (IOException e) {
@@ -49,6 +50,7 @@ public class ClientHandler implements Runnable {
         try {
             while (true) {
                 Object msg = in.readObject();   //Receive Object
+                System.out.println(msg.toString());
                 if (msg instanceof String) {    //Either chat or special keyword
 
                     String message = ((String)msg).substring(3);
@@ -67,6 +69,7 @@ public class ClientHandler implements Runnable {
                     System.out.println(msg);
                 }else if (msg instanceof ArrayList){
                     ArrayList<Cell> update = (ArrayList<Cell>)msg;
+                    System.out.println("adding update");
                     server.addUpdate(this, update);
                 }else if (msg == null){
                     break;
