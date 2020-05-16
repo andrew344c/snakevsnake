@@ -71,7 +71,7 @@ public class Game {
     public void update() throws InterruptedException, SocketInexistentException {
         // Update snake body (Will also update tail in grid directly in update call, but head will not be updated in grid)
         try {
-            updatedCells = player.update(); //Will return [head ...]
+            updatedCells = player.update(); //Will return all cells that need to be updated
         }catch (SnakeOutOfBoundsException error) {
             updatedCells = player.killSnake();
             lost = true;
@@ -79,12 +79,6 @@ public class Game {
 
         // Sends and updates cell info to/from server
         if (server != null) {
-            //sketchy dush stuff
-            if (player.isMoving() && player.getHead().hasSnake()) {
-                updatedCells = player.killSnake();
-                lost = true;
-            }
-
             if (lost) {
                 try {
                     server.send(LOST_SIGNAL);
@@ -101,41 +95,26 @@ public class Game {
                 //sketchy dush
                 //sending "projection" of head and then changing back
 
+                boolean previous = player.getHead().hasSnake();
                 player.getHead().setSnake(true);
                 try {
                     server.send(updatedCells);
                 } catch (IOException e) {
                     throw new SocketInexistentException(server.IP, server.PORT);
                 }
-                player.getHead().setSnake(false);
+                player.getHead().setSnake(previous);
             }
 
-            // will cause a bug for single player server where forever blocks, but if server theres always gonna be more than 1
-            if (server.getUpdate() == null) {
-                synchronized (this) {
-                    this.wait();
-                }
-            }
-
-            for (Cell cell: server.getUpdate()) {
-                updatedCells.add(cell);
-                grid.updateCell(cell);
-            }
-
-            //Update Grid with new locations
-
-            // Send ONLY updated location to server instead of sending whole snake/grid (can allow easy upscaling to more than 2 players)
-            // Note: Will have to send a "projection" of what the head would be, as the head hasn't been updated yet
-            // Receive all necessary updates and updates grid accordingly
-            // NOTE: Is only a possible approach, may switch to different approach later
+            //Wait for and update from server
+            acceptUpdate();
         }
 
-
+        // Food generation: if client eats food, is responsible for generating new food and sends to server
         Cell food = null;
         if (!lost) {
             if (player.isMoving()) {
                 if (!player.getHead().hasSnake()) {
-                    player.getHead().setSnake(true);
+                    player.getHead().setSnake(true);    // If no snake in front, approve snake head's location other wise send lost signal
                     if (player.ate) {
                         food = grid.generateFood();
                         player.ate = false;
@@ -147,47 +126,34 @@ public class Game {
                 }
             }
 
-            if (server != null) {
-                if (lost) {
-                    try {
-                        server.send(LOST_SIGNAL);
-                    } catch (IOException e) {
-                        throw new SocketInexistentException(server.IP, server.PORT);
-                    }
-                    try {
-                        server.send(updatedCells);
-                    } catch (IOException e) {
-                        throw new SocketInexistentException(server.IP, server.PORT);
-                    }
+            //If hits another snake
+            if (server != null && lost) {
+                try {
+                    server.send(LOST_SIGNAL);
+                } catch (IOException e) {
+                    throw new SocketInexistentException(server.IP, server.PORT);
+                }
+                try {
+                    server.send(updatedCells);
+                } catch (IOException e) {
+                    throw new SocketInexistentException(server.IP, server.PORT);
                 }
             }
         }
 
+        // Send food update to server and also receive updates from server (these update could be dead snakes and food)
         if (server != null) {
+            // Send food
             if (food != null) {
                 try {
                     server.send(new ArrayList<Cell>(Collections.singletonList(food)));
                 } catch (IOException e) {
                     throw new SocketInexistentException(server.IP, server.PORT);
                 }
-            } else {
-                try {
-                    server.send("CONTINUE");
-                } catch (IOException e) {
-                    throw new SocketInexistentException(server.IP, server.PORT);
-                }
             }
 
-            if (server.getUpdate() == null) {
-                synchronized (this) {
-                    this.wait();
-                }
-            }
-
-            for (Cell cell: server.getUpdate()) {
-                updatedCells.add(cell);
-                grid.updateCell(cell);
-            }
+            // Wait for and update from server
+            acceptUpdate();
         }
 
         if (lost) {
@@ -205,5 +171,20 @@ public class Game {
 
     public synchronized void ready() {
         this.notify();
+    }
+
+    public void acceptUpdate() throws InterruptedException{
+        // Wait for update from server
+        if (server.getUpdate() == null) {
+            synchronized (this) {
+                this.wait();
+            }
+        }
+
+        // Add update to server
+        for (Cell cell: server.getUpdate()) {
+            updatedCells.add(cell);
+            grid.updateCell(cell);
+        }
     }
 }

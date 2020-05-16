@@ -1,7 +1,7 @@
-# **.Snake V Snake**
+# **Snake V Snake**
 ### APCS Final Project
 
-A twist on the classic snake game, a multiplayer snake game where players compete against each other in various gamemodes.
+A twist on the classic singleplayer snake game, a multiplayer snake game where players compete against each other in various gamemodes.
 
 ###Project Structure
 The Game components package contain essential to the game itself. The GUI package contains the frontend side of the game.
