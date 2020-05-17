@@ -24,7 +24,7 @@ import java.util.ArrayList;
 public class GamePanel extends JPanel implements ActionListener {
 
     private CellView[][] gridWindow;
-    private static final int DELAY = 125;
+    private static final int DELAY = 2000;
     private Timer timer;
     private Game game;
 

@@ -52,8 +52,12 @@ public class ClientService implements Runnable {
 
     // add in some way to confirm that cell has been sent
     public void send(Object obj) throws IOException {
+        System.out.print("Sending: ");
         System.out.println(obj.toString());
         out.writeObject(obj);
+        out.reset(); //clear cache, without it deserializes wrong reference of object
+        System.out.print("Sent: ");
+        System.out.println(obj.toString());
     }
 
     public ArrayList<Cell> getUpdate() {

@@ -50,6 +50,7 @@ public class ClientHandler implements Runnable {
         try {
             while (true) {
                 Object msg = in.readObject();   //Receive Object
+                System.out.print("Received: ");
                 System.out.println(msg.toString());
                 if (msg instanceof String) {    //Either chat or special keyword
 
@@ -69,7 +70,8 @@ public class ClientHandler implements Runnable {
                     System.out.println(msg);
                 }else if (msg instanceof ArrayList){
                     ArrayList<Cell> update = (ArrayList<Cell>)msg;
-                    System.out.println("adding update");
+                    System.out.print("Received update of ");
+                    System.out.println(update.toString());
                     server.addUpdate(this, update);
                 }else if (msg == null){
                     break;
