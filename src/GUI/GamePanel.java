@@ -40,7 +40,7 @@ public class GamePanel extends JPanel implements ActionListener {
         }
 
         //Setup Game and Update GUI after
-        game = new Game(rows, cols);
+        game = new Game(rows, cols, this);
         updateGuiGrid(game.getUpdates());
 
         addKeyListener(new ControllerAdapter());
@@ -51,7 +51,7 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public GamePanel(String ip, int port) {
-        game = new Game(ip, port);
+        game = new Game(ip, port, this);
         int rows = game.getRows();
         int cols = game.getCols();
         setLayout(new GridLayout(rows, cols));
@@ -116,6 +116,16 @@ public class GamePanel extends JPanel implements ActionListener {
         public void keyPressed(KeyEvent e) {
             game.keyPressed(e);
         }
+    }
+
+
+    /**
+     * Called when game finishes, ends the game loop
+     *
+     * @param endMessage reason for game ending
+     */
+    public void endGame(String endMessage) {
+
     }
 
 }

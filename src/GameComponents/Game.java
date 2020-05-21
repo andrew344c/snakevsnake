@@ -1,5 +1,6 @@
 package GameComponents;
 
+import GUI.GamePanel;
 import Networking.ClientService;
 import Networking.SocketInexistentException;
 
@@ -21,6 +22,7 @@ public class Game {
     private Thread serverThread;
     private ArrayList<Cell> updatedCells;
     private boolean lost;
+    private GamePanel guiPanel;
 
     private final String LOST_SIGNAL = "[S]LOST";
     private final String CONTINUE_SIGNAL = "[S]CONTINUE";
@@ -31,32 +33,46 @@ public class Game {
      * @param rows
      * @param cols
      */
-    public Game(int rows, int cols) {
-        //Setup Game Components (Game.Grid and Game.Snake)
+    public Game(int rows, int cols, GamePanel panel) {
+        guiPanel = panel;
+        //Initialize grid, snake, and updated cells
         grid = new Grid(rows, cols);
         player = new Snake(grid.at(cols / 2, rows / 2), grid);
         updatedCells = new ArrayList<Cell>();
+        lost = false;
+
+        //Update snake's initial position
         try {
             player.update();
         } catch (SnakeOutOfBoundsException ignored) {}
         player.getHead().setSnake(true);
         updatedCells.add(player.getHead());
         updatedCells.add(grid.generateFood());
-        lost = false;
     }
 
-    public Game(String ip, int port) {
+    public Game(String ip, int port, GamePanel panel) {
+        guiPanel = panel;
+        lost = false;
+
+        //Setup connection to server
         server = new ClientService(ip, port);
         server.setLock(this);
+
+        //Wait for initial updates from server
         Object[] snakeAndGridAndUpdate = server.initializeGame();    //blocking
         grid = (Grid)snakeAndGridAndUpdate[1];
         player = new Snake((Cell)snakeAndGridAndUpdate[0], grid);
         updatedCells = (ArrayList<Cell>)snakeAndGridAndUpdate[2];
+
+        //Continue listening for server updates
         serverThread = new Thread(server);
         serverThread.start();
-        lost = false;
     }
 
+    /**
+     * Used in GamePanel: gives the updates
+     * @return updated cells
+     */
     public ArrayList<Cell> getUpdates() {
         ArrayList<Cell> temp = updatedCells;
         updatedCells = new ArrayList<Cell>();
@@ -80,28 +96,14 @@ public class Game {
         // Sends and updates cell info to/from server
         if (server != null) {
             if (lost) {
-                try {
-                    server.send(LOST_SIGNAL);
-                }catch (IOException e) {
-                    throw new SocketInexistentException(server.IP, server.PORT);
-                }
-                // Updated Cells is updated in killSnake call
-                try {
-                    server.send(updatedCells);
-                } catch (IOException e) {
-                    throw new SocketInexistentException(server.IP, server.PORT);
-                }
+                server.send(LOST_SIGNAL);
+                server.send(updatedCells);  // Updated Cells is updated in killSnake call
             }else {
                 //sketchy dush
                 //sending "projection" of head and then changing back
-
                 boolean previous = player.getHead().hasSnake();
                 player.getHead().setSnake(true);
-                try {
-                    server.send(updatedCells);
-                } catch (IOException e) {
-                    throw new SocketInexistentException(server.IP, server.PORT);
-                }
+                server.send(updatedCells);
                 player.getHead().setSnake(previous);
             }
 
@@ -112,6 +114,7 @@ public class Game {
         // Food generation: if client eats food, is responsible for generating new food and sends to server
         Cell food = null;
         if (!lost) {
+            // Food generation and snake collision
             if (player.isMoving()) {
                 if (!player.getHead().hasSnake()) {
                     player.getHead().setSnake(true);    // If no snake in front, approve snake head's location other wise send lost signal
@@ -126,18 +129,9 @@ public class Game {
                 }
             }
 
-            //If hits another snake
             if (server != null && lost) {
-                try {
-                    server.send(LOST_SIGNAL);
-                } catch (IOException e) {
-                    throw new SocketInexistentException(server.IP, server.PORT);
-                }
-                try {
-                    server.send(updatedCells);
-                } catch (IOException e) {
-                    throw new SocketInexistentException(server.IP, server.PORT);
-                }
+                server.send(LOST_SIGNAL);
+                server.send(updatedCells);
             }
         }
 
@@ -145,11 +139,7 @@ public class Game {
         if (server != null) {
             // Send food
             if (food != null) {
-                try {
-                    server.send(new ArrayList<Cell>(Collections.singletonList(food)));
-                } catch (IOException e) {
-                    throw new SocketInexistentException(server.IP, server.PORT);
-                }
+                server.send(new ArrayList<Cell>(Collections.singletonList(food)));
             }
 
             // Wait for and update from server
@@ -169,22 +159,34 @@ public class Game {
         return grid.getCols();
     }
 
-    public synchronized void ready() {
+    public synchronized void updateReady() {
         this.notify();
     }
 
     public void acceptUpdate() throws InterruptedException{
         // Wait for update from server
-        if (server.getUpdate() == null) {
+        ArrayList<Cell> update = server.getUpdate();
+        if (update == null) {
+            System.out.println("Waiting for update");
             synchronized (this) {
                 this.wait();
             }
         }
+        System.out.println("Received update");
 
         // Add update to server
         for (Cell cell: server.getUpdate()) {
             updatedCells.add(cell);
             grid.updateCell(cell);
         }
+    }
+
+    /**
+     * Called when game finishes, ends the game loop
+     *
+     * @param endMessage reason for game ending
+     */
+    public void endGame(String endMessage) {
+
     }
 }

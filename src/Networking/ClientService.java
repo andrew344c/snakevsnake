@@ -24,6 +24,7 @@ public class ClientService implements Runnable {
 
     private final static String TYPE_CHAT = "[C]";
     private final static String TYPE_SPECIAL = "[S]";
+    private final String LOST_SIGNAL = "[S]LOST";
 
     public ClientService(String ip, int port) {
         IP = ip;
@@ -51,17 +52,21 @@ public class ClientService implements Runnable {
     }
 
     // add in some way to confirm that cell has been sent
-    public void send(Object obj) throws IOException {
+    public void send(Object obj) {
         System.out.print("Sending: ");
         System.out.println(obj.toString());
-        out.writeObject(obj);
-        out.reset(); //clear cache, without it deserializes wrong reference of object
-        System.out.print("Sent: ");
-        System.out.println(obj.toString());
+        try {
+            out.writeObject(obj);
+            out.reset(); //clear cache, without it deserializes wrong reference of object
+        }catch (IOException e) {
+
+        }
     }
 
     public ArrayList<Cell> getUpdate() {
-        return update;
+        ArrayList<Cell> temp = update;
+        update = null;
+        return temp;
     }
 
     public void setLock(Game lock) {
@@ -73,10 +78,14 @@ public class ClientService implements Runnable {
         try {
             while (true) {
                 Object obj = in.readObject();
-
+                System.out.print("Received: ");
+                System.out.println(obj.toString());
                 if (obj instanceof String) {
+                    // Will either be a chat message or a special message
+                    // Chat will have "[C]" in beginning and special will have "[S]"
                     String msg = ((String)obj).substring(3);
                     String type = ((String)obj).substring(0, 3);
+
                     if (type.equals(TYPE_SPECIAL)) {
                         if (msg.equals("WIN")) {
 
@@ -84,10 +93,12 @@ public class ClientService implements Runnable {
                     }
                 }else if (obj instanceof ArrayList) {
                     update = (ArrayList<Cell>)obj;
-                    game.ready();
+                    game.updateReady();
                 }
             }
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
+            game.endGame("There was an error with the connection to the server");
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
             try {

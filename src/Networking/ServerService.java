@@ -14,7 +14,7 @@ import java.util.*;
 public class ServerService implements Runnable {
     private ServerSocket server;
     private int PORT;
-    private ArrayList<ClientHandler> clients;
+    private HashSet<ClientHandler> clients;
     private HashSet<ClientHandler> playersAlive;
     private static final String LOST_MSG = "!LOST";
     private static final String DISCONNECT_MSG = "!DISCONNECT";
@@ -30,7 +30,7 @@ public class ServerService implements Runnable {
         this.maxPlayers = maxPlayers;
         PORT = port;
         server = new ServerSocket(PORT);
-        clients = new ArrayList<ClientHandler>();
+        clients = new HashSet<ClientHandler>();
         playersAlive = new HashSet<ClientHandler>();
         updatedCells = new HashMap<ClientHandler, ArrayList<Cell>>();
         this.rows = rows;
@@ -76,8 +76,15 @@ public class ServerService implements Runnable {
         }
     }
 
-    public synchronized void removePlayer(ClientHandler player) {
+    public synchronized void losePlayer(ClientHandler player) {
         playersAlive.remove(player);
+        if (updatedCells.containsKey(player)) {
+            updatedCells.remove(player);
+        }
+    }
+    public synchronized void removeClient(ClientHandler client) {
+        losePlayer(client);
+        clients.remove(client);
     }
 
     public synchronized void addUpdate(ClientHandler player, ArrayList<Cell> update) {
@@ -89,11 +96,6 @@ public class ServerService implements Runnable {
     }
 
     public void sendUpdatedCells() {
-        if (playersAlive.size() == 1) {
-            for (ClientHandler receiver: playersAlive) {
-                receiver.send(new ArrayList<Cell>());
-            }
-        }
         for (ClientHandler receiver: playersAlive) {
             for (Map.Entry<ClientHandler, ArrayList<Cell>> entry: updatedCells.entrySet()) {
                 ClientHandler sender = entry.getKey();

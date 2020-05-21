@@ -39,10 +39,6 @@ public class Grid implements Serializable {
         return x >= 0 && x < grid[0].length && y >= 0 && y < grid.length;
     }
 
-    public boolean inSnake(Cell cell) {
-        return cell.hasSnake();
-    }
-
     /**
      *
      * Updates the cell at that location

@@ -45,14 +45,15 @@ public class Cell implements Serializable {
     }
 
     public String toString() {
+        String coords = "(" + x + ", " + y + ")";
         if (hasFood() && hasSnake()) {
-            return "X"; // Not suppose to happen
+            return "X" + coords; // Not suppose to happen
         }else if (hasSnake()) {
-            return "S";
+            return "S" + coords;
         }else if (hasFood()) {
-            return "F";
+            return "F" + coords;
         }else {
-            return "0";
+            return "0" + coords;
         }
 
     }

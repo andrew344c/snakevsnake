@@ -36,6 +36,7 @@ public class ClientHandler implements Runnable {
         System.out.println(obj.toString());
         try {
             out.writeObject(obj);
+            out.reset();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -50,8 +51,7 @@ public class ClientHandler implements Runnable {
         try {
             while (true) {
                 Object msg = in.readObject();   //Receive Object
-                System.out.print("Received: ");
-                System.out.println(msg.toString());
+                System.out.println("Received: " + msg.toString() + " From: " + client.toString());
                 if (msg instanceof String) {    //Either chat or special keyword
 
                     String message = ((String)msg).substring(3);
@@ -59,19 +59,15 @@ public class ClientHandler implements Runnable {
 
                     if (type.equals(TYPE_SPECIAL)) { //Special Keyword
                         if (message.equals("LOST")) {
-                            server.removePlayer(this);
+                            server.losePlayer(this);
                         }else if (message.equals("CONTINUE")) {
                             //we good
                         }
                     }else if (type.equals(TYPE_CHAT)) { //Chat
 
                     }
-                    System.out.print(client + " ");
-                    System.out.println(msg);
                 }else if (msg instanceof ArrayList){
                     ArrayList<Cell> update = (ArrayList<Cell>)msg;
-                    System.out.print("Received update of ");
-                    System.out.println(update.toString());
                     server.addUpdate(this, update);
                 }else if (msg == null){
                     break;
@@ -79,7 +75,9 @@ public class ClientHandler implements Runnable {
                     throw new ClassNotFoundException();
                 }
             }
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
+            server.removeClient(this);
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
             try {
