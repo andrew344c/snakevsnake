@@ -62,14 +62,34 @@ public class Snake {
         Cell originalHead = body.getFirst();
         int newX = originalHead.getX() + dx;
         int newY = originalHead.getY() + dy;
-        if (!grid.inGrid(newX, newY)) {
-            throw new SnakeOutOfBoundsException();
-        }
 
-        // i hate this might change later
-        Cell newHead = grid.at(originalHead.getX() + dx, originalHead.getY() + dy);
-        body.addFirst(newHead);
-        changedLocations.add(newHead);
+        Cell newHead;
+        if (newX >= grid.getCols()) {
+            newHead = grid.at(0, originalHead.getY() + dy);
+            body.addFirst(newHead);
+            changedLocations.add(newHead);
+        } else if (newX <= -1){
+            newHead = grid.at(grid.getCols() - 1, originalHead.getY() + dy);
+            body.addFirst(newHead);
+            changedLocations.add(newHead);
+        } else if (newY <= -1){
+            newHead = grid.at(originalHead.getX() + dx, grid.getRows() - 1);
+            body.addFirst(newHead);
+            changedLocations.add(newHead);
+        } else if (newY >= grid.getCols()){
+            newHead = grid.at(originalHead.getX() + dx, 0);
+            body.addFirst(newHead);
+            changedLocations.add(newHead);
+        } else {
+//        if (!grid.inGrid(newX, newY)) {
+//            throw new SnakeOutOfBoundsException();
+//        }
+
+            // i hate this might change later
+            newHead = grid.at(originalHead.getX() + dx, originalHead.getY() + dy);
+            body.addFirst(newHead);
+            changedLocations.add(newHead);
+        }
 
         if (newHead.hasFood()) {
             newHead.setFood(false);

@@ -24,7 +24,7 @@ import java.util.ArrayList;
 public class GamePanel extends JPanel implements ActionListener {
 
     private CellView[][] gridWindow;
-    private static final int DELAY = 2000;
+    private static final int DELAY = 125;
     private Timer timer;
     private Game game;
 
@@ -34,7 +34,7 @@ public class GamePanel extends JPanel implements ActionListener {
         gridWindow = new CellView[rows][cols];
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                gridWindow[i][j] = new CellView(Color.WHITE);
+                gridWindow[i][j] = new CellView(Color.BLACK, false);
                 add(gridWindow[i][j]);
             }
         }
@@ -58,7 +58,7 @@ public class GamePanel extends JPanel implements ActionListener {
         gridWindow = new CellView[rows][cols];
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                gridWindow[i][j] = new CellView(Color.WHITE);
+                gridWindow[i][j] = new CellView(Color.BLACK, false);
                 add(gridWindow[i][j]);
             }
         }
@@ -78,7 +78,7 @@ public class GamePanel extends JPanel implements ActionListener {
             }else if (cell.hasFood()) {
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.RED);
             }else {
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.WHITE);
+                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             }
         }
     }
@@ -99,11 +99,13 @@ public class GamePanel extends JPanel implements ActionListener {
     private static class CellView extends JLabel {
         private static final int CELL_SIZE = 20;
         private static final int BORDER_SIZE = 1;
-        public CellView(Color color) {
+        public CellView(Color color, boolean gridLines) {
             setPreferredSize(new Dimension(CELL_SIZE, CELL_SIZE));
             setOpaque(true);
             setBackground(color);
-            setBorder(BorderFactory.createLineBorder(Color.BLACK, BORDER_SIZE));
+            if (gridLines){
+                setBorder(BorderFactory.createLineBorder(Color.BLACK, BORDER_SIZE));
+            }
         }
 
         public void setColor(Color color) {
