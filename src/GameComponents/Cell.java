@@ -10,6 +10,10 @@ public class Cell implements Serializable {
 
     private boolean food;
     private boolean snake;
+    private boolean headUp;
+    private boolean headRight;
+    private boolean headDown;
+    private boolean headLeft;
     private int x;
     private int y;
 
@@ -18,6 +22,10 @@ public class Cell implements Serializable {
         this.y = y;
         food = false;
         snake = false;
+        headUp = false;
+        headRight = false;
+        headDown = false;
+        headLeft = false;
     }
 
     public int getX() {
@@ -31,6 +39,24 @@ public class Cell implements Serializable {
     public boolean hasFood() {
         return food;
     }
+
+    public boolean hasSnakeHeadUp() { return headUp;}
+
+    public void setSnakeHeadUp(boolean headUp) { this.headUp = headUp;}
+
+    public boolean hasSnakeHeadRight() { return headRight;}
+
+    public void setSnakeHeadRight(boolean headRight) { this.headRight = headRight;}
+
+    public boolean hasSnakeHeadDown() { return headDown;}
+
+    public void setSnakeHeadDown(boolean headDown) { this.headDown = headDown;}
+
+    public boolean hasSnakeHeadLeft() { return headLeft;}
+
+    public void setSnakeHeadLeft(boolean headLeft) { this.headLeft = headLeft;}
+
+    public void setAllFalse() { headUp = false; headRight = false; headDown = false; headLeft = false;}
 
     public boolean hasSnake() {
         return snake;

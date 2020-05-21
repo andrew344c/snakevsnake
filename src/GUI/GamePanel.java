@@ -72,12 +72,20 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void updateGuiGrid(ArrayList<Cell> changedLocations) {
+        Image body = new ImageIcon("snakeBody.png").getImage();
+        Image headDown = new ImageIcon("snakeDown.png").getImage();
+        Image headRight = new ImageIcon("snakeRight.png").getImage();
+        Image headUp = new ImageIcon("snakeUp.png").getImage();
+        Image headLeft = new ImageIcon("snakeLeft.png").getImage();
         for (Cell cell: changedLocations) {
             if (cell.hasSnake()) {
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.GREEN);
+                gridWindow[cell.getY()][cell.getX()].setIcon(null);
+                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(body));
             }else if (cell.hasFood()) {
+                gridWindow[cell.getY()][cell.getX()].setIcon(null);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.RED);
             }else {
+                gridWindow[cell.getY()][cell.getX()].setIcon(null);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             }
         }
@@ -97,7 +105,7 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     private static class CellView extends JLabel {
-        private static final int CELL_SIZE = 20;
+        private static final int CELL_SIZE = 25;
         private static final int BORDER_SIZE = 1;
         public CellView(Color color, boolean gridLines) {
             setPreferredSize(new Dimension(CELL_SIZE, CELL_SIZE));
