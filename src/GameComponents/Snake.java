@@ -88,6 +88,9 @@ public class Snake {
             // i hate this might change later
             newHead = grid.at(originalHead.getX() + dx, originalHead.getY() + dy);
             body.addFirst(newHead);
+            if (dx > 0){
+                newHead.setSnakeHeadRight(true);
+            }
             changedLocations.add(newHead);
         }
 
@@ -118,22 +121,22 @@ public class Snake {
         }
         int keyCode = e.getKeyCode();
         if (keyCode == KeyEvent.VK_UP) {
-            if (body.size() == 1 || dy == 0) {  //Will only change that direction if moving in opposite axis (otherwise will collide in self or will be same direction)
+            if (body.size() == 1 && dy == 0 || dy == 0) {  //Will only change that direction if moving in opposite axis (otherwise will collide in self or will be same direction)
                 dx = 0;
                 dy = -1;
             }
         }else if (keyCode == KeyEvent.VK_DOWN) {
-            if (body.size() == 1 || dy == 0) {
+            if (body.size() == 1 && dy == 0 || dy == 0) {
                 dx = 0;
                 dy = 1;
             }
         }else if (keyCode == KeyEvent.VK_LEFT) {
-            if (body.size() == 1 || dx == 0) {
+            if (body.size() == 1 && dx == 0 || dx == 0) {
                 dx = -1;
                 dy = 0;
             }
         }else if (keyCode == KeyEvent.VK_RIGHT) {
-            if (body.size() == 1 || dx == 0) {
+            if (body.size() == 1 && dx == 0|| dx == 0) {
                 dx = 1;
                 dy = 0;
             }

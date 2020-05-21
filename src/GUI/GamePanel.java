@@ -78,8 +78,10 @@ public class GamePanel extends JPanel implements ActionListener {
         Image headUp = new ImageIcon("snakeUp.png").getImage();
         Image headLeft = new ImageIcon("snakeLeft.png").getImage();
         for (Cell cell: changedLocations) {
-            if (cell.hasSnake()) {
-                gridWindow[cell.getY()][cell.getX()].setIcon(null);
+            if (cell.hasSnakeHeadRight()){
+                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(headRight));
+                cell.setAllFalse();
+            }else if (cell.hasSnake()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(body));
             }else if (cell.hasFood()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(null);
