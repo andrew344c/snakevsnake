@@ -28,6 +28,12 @@ public class GamePanel extends JPanel implements ActionListener {
     private Timer timer;
     private Game game;
 
+    private final Image body = new ImageIcon("resources/snakeBody.png").getImage();
+    private final Image headDown = new ImageIcon("resources/snakeDown.png").getImage();
+    private final Image headRight = new ImageIcon("resources/snakeRight.png").getImage();
+    private final Image headUp = new ImageIcon("resources/snakeUp.png").getImage();
+    private final Image headLeft = new ImageIcon("resources/snakeLeft.png").getImage();
+
     public GamePanel(int rows, int cols) {
         //Setup gui grid
         setLayout(new GridLayout(rows, cols));
@@ -72,17 +78,14 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void updateGuiGrid(ArrayList<Cell> changedLocations) {
-        Image body = new ImageIcon("snakeBody.png").getImage();
-        Image headDown = new ImageIcon("snakeDown.png").getImage();
-        Image headRight = new ImageIcon("snakeRight.png").getImage();
-        Image headUp = new ImageIcon("snakeUp.png").getImage();
-        Image headLeft = new ImageIcon("snakeLeft.png").getImage();
         for (Cell cell: changedLocations) {
             if (cell.hasSnakeHeadRight()){
                 gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(headRight));
+                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
                 cell.setAllFalse();
             }else if (cell.hasSnake()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(body));
+                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             }else if (cell.hasFood()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(null);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.RED);
