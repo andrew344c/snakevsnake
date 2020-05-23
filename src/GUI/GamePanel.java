@@ -16,9 +16,6 @@ import java.util.ArrayList;
  * Gui representation of game grid
  * Listens for keystrokes here for snake control
  *
- * TODO: Improve GUI (Currently Basic Grid)
- * TODO: Implement multi-player support
- *
  * @author Andrew
  */
 public class GamePanel extends JPanel implements ActionListener {
@@ -28,11 +25,11 @@ public class GamePanel extends JPanel implements ActionListener {
     private Timer timer;
     private Game game;
 
-    private final Image body = new ImageIcon("resources/snakeBody.png").getImage();
-    private final Image headDown = new ImageIcon("resources/snakeDown.png").getImage();
-    private final Image headRight = new ImageIcon("resources/snakeRight.png").getImage();
-    private final Image headUp = new ImageIcon("resources/snakeUp.png").getImage();
-    private final Image headLeft = new ImageIcon("resources/snakeLeft.png").getImage();
+    private final ImageIcon body = new ImageIcon("resources/snakeBody.png");
+    private final ImageIcon headDown = new ImageIcon("resources/snakeDown.png");
+    private final ImageIcon headRight = new ImageIcon("resources/snakeRight.png");
+    private final ImageIcon headUp = new ImageIcon("resources/snakeUp.png");
+    private final ImageIcon headLeft = new ImageIcon("resources/snakeLeft.png");
 
     public GamePanel(int rows, int cols) {
         //Setup gui grid
@@ -79,12 +76,12 @@ public class GamePanel extends JPanel implements ActionListener {
 
     public void updateGuiGrid(ArrayList<Cell> changedLocations) {
         for (Cell cell: changedLocations) {
-            if (cell.hasSnakeHeadRight()){
-                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(headRight));
+            if (cell.hasSnakeHeadRight()) {
+                gridWindow[cell.getY()][cell.getX()].setIcon(headRight);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
                 cell.setAllFalse();
             }else if (cell.hasSnake()) {
-                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(body));
+                gridWindow[cell.getY()][cell.getX()].setIcon(body);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             }else if (cell.hasFood()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(null);

@@ -78,9 +78,7 @@ public class ServerService implements Runnable {
 
     public synchronized void losePlayer(ClientHandler player) {
         playersAlive.remove(player);
-        if (updatedCells.containsKey(player)) {
-            updatedCells.remove(player);
-        }
+        updatedCells.remove(player);
     }
     public synchronized void removeClient(ClientHandler client) {
         losePlayer(client);
@@ -97,15 +95,15 @@ public class ServerService implements Runnable {
 
     public void sendUpdatedCells() {
         for (ClientHandler receiver: playersAlive) {
+            ArrayList<Cell> totalUpdate = new ArrayList<Cell>();
             for (Map.Entry<ClientHandler, ArrayList<Cell>> entry: updatedCells.entrySet()) {
                 ClientHandler sender = entry.getKey();
                 ArrayList<Cell> update = entry.getValue();
                 if (sender != receiver) {
-                    System.out.println(update.toString());
-                    System.out.println(receiver.client.toString());
-                    receiver.send(update);
+                    totalUpdate.addAll(update);
                 }
             }
+            receiver.send(totalUpdate);
         }
     }
 

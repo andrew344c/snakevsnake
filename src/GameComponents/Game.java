@@ -63,7 +63,7 @@ public class Game {
         grid = (Grid)snakeAndGridAndUpdate[1];
         player = new Snake((Cell)snakeAndGridAndUpdate[0], grid);
         updatedCells = (ArrayList<Cell>)snakeAndGridAndUpdate[2];
-
+        System.out.println(updatedCells);
         //Continue listening for server updates
         serverThread = new Thread(server);
         serverThread.start();
@@ -116,22 +116,21 @@ public class Game {
         if (!lost) {
             // Food generation and snake collision
             if (player.isMoving()) {
-                if (!player.getHead().hasSnake()) {
+                if (!player.getHead().hasSnake()) { // Not colliding into snake
                     player.getHead().setSnake(true);    // If no snake in front, approve snake head's location other wise send lost signal
                     if (player.ate) {
                         food = grid.generateFood();
                         player.ate = false;
                         updatedCells.add(food);
                     }
-                } else {
+                } else {    // Bumped into snake
                     updatedCells = player.killSnake();
                     lost = true;
+                    if (server != null) {
+                        server.send(LOST_SIGNAL);
+                        server.send(updatedCells);
+                    }
                 }
-            }
-
-            if (server != null && lost) {
-                server.send(LOST_SIGNAL);
-                server.send(updatedCells);
             }
         }
 
