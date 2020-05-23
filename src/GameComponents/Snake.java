@@ -66,20 +66,20 @@ public class Snake {
         Cell newHead;
         if (newX >= grid.getCols()) {
             newHead = grid.at(0, originalHead.getY() + dy);
+            newHead.setSnakeHeadRight(true);
             body.addFirst(newHead);
-            changedLocations.add(newHead);
         } else if (newX <= -1){
             newHead = grid.at(grid.getCols() - 1, originalHead.getY() + dy);
+            newHead.setSnakeHeadLeft(true);
             body.addFirst(newHead);
-            changedLocations.add(newHead);
         } else if (newY <= -1){
             newHead = grid.at(originalHead.getX() + dx, grid.getRows() - 1);
+            newHead.setSnakeHeadUp(true);
             body.addFirst(newHead);
-            changedLocations.add(newHead);
         } else if (newY >= grid.getCols()){
             newHead = grid.at(originalHead.getX() + dx, 0);
+            newHead.setSnakeHeadDown(true);
             body.addFirst(newHead);
-            changedLocations.add(newHead);
         } else {
 //        if (!grid.inGrid(newX, newY)) {
 //            throw new SnakeOutOfBoundsException();
@@ -90,9 +90,17 @@ public class Snake {
             body.addFirst(newHead);
             if (dx > 0){
                 newHead.setSnakeHeadRight(true);
+            } else if (dx < 0) {
+                newHead.setSnakeHeadLeft(true);
+            } else if (dy > 0) {
+                newHead.setSnakeHeadDown(true);
+            } else {
+                newHead.setSnakeHeadUp(true);
             }
-            changedLocations.add(newHead);
         }
+        originalHead.setAllFalse();
+        changedLocations.add(newHead);
+        changedLocations.add(originalHead);
 
         if (newHead.hasFood()) {
             newHead.setFood(false);

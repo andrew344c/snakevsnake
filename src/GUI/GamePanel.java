@@ -33,6 +33,7 @@ public class GamePanel extends JPanel implements ActionListener {
     private final Image headRight = new ImageIcon("resources/snakeRight.png").getImage();
     private final Image headUp = new ImageIcon("resources/snakeUp.png").getImage();
     private final Image headLeft = new ImageIcon("resources/snakeLeft.png").getImage();
+    private final Image apple = new ImageIcon("resources/apple.png").getImage();
 
     public GamePanel(int rows, int cols) {
         //Setup gui grid
@@ -79,16 +80,24 @@ public class GamePanel extends JPanel implements ActionListener {
 
     public void updateGuiGrid(ArrayList<Cell> changedLocations) {
         for (Cell cell: changedLocations) {
-            if (cell.hasSnakeHeadRight()){
+            if (cell.hasSnakeHeadRight()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(headRight));
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
-                cell.setAllFalse();
+            } else if (cell.hasSnakeHeadLeft()){
+                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(headLeft));
+                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
+            } else if (cell.hasSnakeHeadUp()){
+                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(headUp));
+                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
+            } else if (cell.hasSnakeHeadDown()){
+                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(headDown));
+                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             }else if (cell.hasSnake()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(body));
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             }else if (cell.hasFood()) {
-                gridWindow[cell.getY()][cell.getX()].setIcon(null);
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.RED);
+                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(apple));
+                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             }else {
                 gridWindow[cell.getY()][cell.getX()].setIcon(null);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
