@@ -1,5 +1,11 @@
 package GameComponents;
 
+import sun.applet.Main;
+
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import java.io.File;
 import java.util.*;
 import java.awt.event.*;
 
@@ -66,20 +72,20 @@ public class Snake {
         Cell newHead;
         if (newX >= grid.getCols()) {
             newHead = grid.at(0, originalHead.getY() + dy);
+            newHead.setSnakeHeadRight(true);
             body.addFirst(newHead);
-            changedLocations.add(newHead);
         } else if (newX <= -1){
             newHead = grid.at(grid.getCols() - 1, originalHead.getY() + dy);
+            newHead.setSnakeHeadLeft(true);
             body.addFirst(newHead);
-            changedLocations.add(newHead);
         } else if (newY <= -1){
             newHead = grid.at(originalHead.getX() + dx, grid.getRows() - 1);
+            newHead.setSnakeHeadUp(true);
             body.addFirst(newHead);
-            changedLocations.add(newHead);
         } else if (newY >= grid.getCols()){
             newHead = grid.at(originalHead.getX() + dx, 0);
+            newHead.setSnakeHeadDown(true);
             body.addFirst(newHead);
-            changedLocations.add(newHead);
         } else {
 //        if (!grid.inGrid(newX, newY)) {
 //            throw new SnakeOutOfBoundsException();
@@ -90,19 +96,39 @@ public class Snake {
             body.addFirst(newHead);
             if (dx > 0){
                 newHead.setSnakeHeadRight(true);
+            } else if (dx < 0) {
+                newHead.setSnakeHeadLeft(true);
+            } else if (dy > 0) {
+                newHead.setSnakeHeadDown(true);
+            } else {
+                newHead.setSnakeHeadUp(true);
             }
-            changedLocations.add(newHead);
         }
 
         if (newHead.hasFood()) {
             newHead.setFood(false);
+            newHead.setAllFalse();
+            if(dy < 0) {
+                newHead.setSnakeBiteUp(true);
+            }else if(dy > 0) {
+                newHead.setSnakeBiteDown(true);
+            }else if(dx > 0) {
+                newHead.setSnakeBiteRight(true);
+            }else{
+                newHead.setSnakeBiteLeft(true);
+            }
             ate = true;
+            playSound("apple-crunch.wav");
         }else {
             Cell oldTail = body.removeLast();
             previousTail = oldTail;
             oldTail.setSnake(false);
             changedLocations.add(oldTail);
         }
+
+        originalHead.setAllFalse();
+        changedLocations.add(newHead);
+        changedLocations.add(originalHead);
 
         return changedLocations;
     }
@@ -158,5 +184,24 @@ public class Snake {
         return update;
     }
 
+    /**
+     * Plays sound file (source: https://stackoverflow.com/questions/26305/how-can-i-play-sound-in-java)
+     */
+    public static synchronized void playSound(final String url) {
+        new Thread(new Runnable() {
+            // The wrapper thread is unnecessary, unless it blocks on the
+            // Clip finishing; see comments.
+            public void run() {
+                try {
+                    Clip clip = AudioSystem.getClip();
+                    AudioInputStream inputStream = AudioSystem.getAudioInputStream(new File("resources/" + url).getAbsoluteFile());
+                    clip.open(inputStream);
+                    clip.start();
+                } catch (Exception e) {
+                    System.err.println(e.getMessage());
+                }
+            }
+        }).start();
+    }
 
 }
