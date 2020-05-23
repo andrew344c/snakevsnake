@@ -16,6 +16,9 @@ import java.util.ArrayList;
  * Gui representation of game grid
  * Listens for keystrokes here for snake control
  *
+ * TODO: Improve GUI (Currently Basic Grid)
+ * TODO: Implement multi-player support
+ *
  * @author Andrew
  */
 public class GamePanel extends JPanel implements ActionListener {
@@ -30,7 +33,11 @@ public class GamePanel extends JPanel implements ActionListener {
     private final ImageIcon headRight = new ImageIcon("resources/snakeRight.png");
     private final ImageIcon headUp = new ImageIcon("resources/snakeUp.png");
     private final ImageIcon headLeft = new ImageIcon("resources/snakeLeft.png");
-
+    private final ImageIcon apple = new ImageIcon("resources/apple.png");
+    private final ImageIcon biteUp = new ImageIcon("resources/snakeBiteUp.png");
+    private final ImageIcon biteRight = new ImageIcon("resources/snakeBiteRight.png");
+    private final ImageIcon biteDown = new ImageIcon("resources/snakeBiteDown.png");
+    private final ImageIcon biteLeft = new ImageIcon("resources/snakeBiteLeft.png");
 
     public GamePanel(int rows, int cols) {
         //Setup gui grid
@@ -76,39 +83,38 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void updateGuiGrid(ArrayList<Cell> changedLocations) {
-        for (Cell cell: changedLocations) {
+        for (Cell cell : changedLocations) {
             if (cell.hasSnakeHeadRight()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(headRight);
-                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(headRight));
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
-            } else if (cell.hasSnakeHeadLeft()){
-                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(headLeft));
+            } else if (cell.hasSnakeHeadLeft()) {
+                gridWindow[cell.getY()][cell.getX()].setIcon(headLeft);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
-            } else if (cell.hasSnakeHeadUp()){
-                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(headUp));
+            } else if (cell.hasSnakeHeadUp()) {
+                gridWindow[cell.getY()][cell.getX()].setIcon(headUp);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
-            } else if (cell.hasSnakeHeadDown()){
-                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(headDown));
+            } else if (cell.hasSnakeHeadDown()) {
+                gridWindow[cell.getY()][cell.getX()].setIcon(headDown);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
-            } else if (cell.hasSnakeBiteUp()){
-                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(biteUp));
+            } else if (cell.hasSnakeBiteUp()) {
+                gridWindow[cell.getY()][cell.getX()].setIcon(biteUp);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
-            } else if (cell.hasSnakeBiteRight()){
-                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(biteRight));
+            } else if (cell.hasSnakeBiteRight()) {
+                gridWindow[cell.getY()][cell.getX()].setIcon(biteRight);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
-            } else if (cell.hasSnakeBiteDown()){
-                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(biteDown));
+            } else if (cell.hasSnakeBiteDown()) {
+                gridWindow[cell.getY()][cell.getX()].setIcon(biteDown);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
-            } else if (cell.hasSnakeBiteLeft()){
-                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(biteLeft));
+            } else if (cell.hasSnakeBiteLeft()) {
+                gridWindow[cell.getY()][cell.getX()].setIcon(biteLeft);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
-            }else if (cell.hasSnake()) {
+            } else if (cell.hasSnake()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(body);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
-            }else if (cell.hasFood()) {
-                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(apple));
+            } else if (cell.hasFood()) {
+                gridWindow[cell.getY()][cell.getX()].setIcon(apple);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
-            }else {
+            } else {
                 gridWindow[cell.getY()][cell.getX()].setIcon(null);
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             }
@@ -131,11 +137,12 @@ public class GamePanel extends JPanel implements ActionListener {
     private static class CellView extends JLabel {
         private static final int CELL_SIZE = 25;
         private static final int BORDER_SIZE = 1;
+
         public CellView(Color color, boolean gridLines) {
             setPreferredSize(new Dimension(CELL_SIZE, CELL_SIZE));
             setOpaque(true);
             setBackground(color);
-            if (gridLines){
+            if (gridLines) {
                 setBorder(BorderFactory.createLineBorder(Color.BLACK, BORDER_SIZE));
             }
         }
@@ -161,5 +168,4 @@ public class GamePanel extends JPanel implements ActionListener {
     public void endGame(String endMessage) {
 
     }
-
 }

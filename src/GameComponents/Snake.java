@@ -1,6 +1,5 @@
 package GameComponents;
 
-import sun.applet.Main;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
