@@ -34,6 +34,10 @@ public class GamePanel extends JPanel implements ActionListener {
     private final Image headUp = new ImageIcon("resources/snakeUp.png").getImage();
     private final Image headLeft = new ImageIcon("resources/snakeLeft.png").getImage();
     private final Image apple = new ImageIcon("resources/apple.png").getImage();
+    private final Image biteUp = new ImageIcon("resources/snakeBiteUp.png").getImage();
+    private final Image biteRight = new ImageIcon("resources/snakeBiteRight.png").getImage();
+    private final Image biteDown = new ImageIcon("resources/snakeBiteDown.png").getImage();
+    private final Image biteLeft = new ImageIcon("resources/snakeBiteLeft.png").getImage();
 
     public GamePanel(int rows, int cols) {
         //Setup gui grid
@@ -91,6 +95,18 @@ public class GamePanel extends JPanel implements ActionListener {
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             } else if (cell.hasSnakeHeadDown()){
                 gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(headDown));
+                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
+            } else if (cell.hasSnakeBiteUp()){
+                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(biteUp));
+                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
+            } else if (cell.hasSnakeBiteRight()){
+                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(biteRight));
+                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
+            } else if (cell.hasSnakeBiteDown()){
+                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(biteDown));
+                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
+            } else if (cell.hasSnakeBiteLeft()){
+                gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(biteLeft));
                 gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             }else if (cell.hasSnake()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(new ImageIcon(body));

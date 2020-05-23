@@ -104,12 +104,19 @@ public class Snake {
                 newHead.setSnakeHeadUp(true);
             }
         }
-        originalHead.setAllFalse();
-        changedLocations.add(newHead);
-        changedLocations.add(originalHead);
 
         if (newHead.hasFood()) {
             newHead.setFood(false);
+            newHead.setAllFalse();
+            if(dy < 0) {
+                newHead.setSnakeBiteUp(true);
+            }else if(dy > 0) {
+                newHead.setSnakeBiteDown(true);
+            }else if(dx > 0) {
+                newHead.setSnakeBiteRight(true);
+            }else{
+                newHead.setSnakeBiteLeft(true);
+            }
             ate = true;
             playSound("apple-crunch.wav");
         }else {
@@ -118,6 +125,10 @@ public class Snake {
             oldTail.setSnake(false);
             changedLocations.add(oldTail);
         }
+
+        originalHead.setAllFalse();
+        changedLocations.add(newHead);
+        changedLocations.add(originalHead);
 
         return changedLocations;
     }

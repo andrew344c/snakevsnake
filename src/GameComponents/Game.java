@@ -45,7 +45,7 @@ public class Game {
         try {
             player.update();
         } catch (SnakeOutOfBoundsException ignored) {}
-        player.getHead().setSnake(true);
+        player.getHead().setSnakeHeadUp(true);
         updatedCells.add(player.getHead());
         updatedCells.add(grid.generateFood());
     }

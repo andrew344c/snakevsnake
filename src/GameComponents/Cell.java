@@ -14,6 +14,10 @@ public class Cell implements Serializable {
     private boolean headRight;
     private boolean headDown;
     private boolean headLeft;
+    private boolean biteUp;
+    private boolean biteRight;
+    private boolean biteDown;
+    private boolean biteLeft;
     private int x;
     private int y;
 
@@ -26,6 +30,10 @@ public class Cell implements Serializable {
         headRight = false;
         headDown = false;
         headLeft = false;
+        biteUp = false;
+        biteRight = false;
+        biteDown = false;
+        biteLeft = false;
     }
 
     public int getX() {
@@ -56,7 +64,23 @@ public class Cell implements Serializable {
 
     public void setSnakeHeadLeft(boolean headLeft) { this.headLeft = headLeft;}
 
-    public void setAllFalse() { headUp = false; headRight = false; headDown = false; headLeft = false;}
+    public void setSnakeBiteUp(boolean biteUp) { this.biteUp = biteUp;}
+
+    public boolean hasSnakeBiteUp(){ return biteUp; }
+
+    public void setSnakeBiteRight(boolean biteRight) { this.biteRight = biteRight;}
+
+    public boolean hasSnakeBiteRight(){ return biteRight; }
+
+    public void setSnakeBiteDown(boolean biteDown) { this.biteDown = biteDown;}
+
+    public boolean hasSnakeBiteDown(){ return biteDown; }
+
+    public void setSnakeBiteLeft(boolean biteLeft) { this.biteLeft = biteLeft;}
+
+    public boolean hasSnakeBiteLeft(){ return biteLeft; }
+
+    public void setAllFalse() { headUp = false; headRight = false; headDown = false; headLeft = false; biteUp = false; biteRight = false; biteDown = false; biteLeft = false;}
 
     public boolean hasSnake() {
         return snake;
