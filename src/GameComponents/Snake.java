@@ -54,9 +54,6 @@ public class Snake {
      * Thus the tail is directly changed on grid here, but the head is not and requires further handling
      * 
      * @return An arraylist of all cells that have been changed/updated
-     *
-     * Note: The 0th item (if there is one) will always be the new head
-     * The arraylist will only be of size 0, 1, or 2 (Start: No movement, Eaten: Tail stays same, Normal: Tail and head change)
      */
     public ArrayList<Cell> update() throws SnakeOutOfBoundsException {
         choseDirection = false;
@@ -90,7 +87,6 @@ public class Snake {
 //            throw new SnakeOutOfBoundsException();
 //        }
 
-            // i hate this might change later
             newHead = grid.at(originalHead.getX() + dx, originalHead.getY() + dy);
             body.addFirst(newHead);
             if (dx > 0){

@@ -21,6 +21,7 @@ public class ServerService implements Runnable {
     private int maxPlayers;
     private HashMap<ClientHandler, ArrayList<Cell>> updatedCells;
     private final Object playerLock = new Object();
+    private int playersReady;
 
     private int rows;
     private int cols;
@@ -36,6 +37,7 @@ public class ServerService implements Runnable {
         this.rows = rows;
         this.cols = cols;
         this.foodAmount = foodAmount;
+        playersReady = 0;
     }
 
     //insanely stupid but good enough also i might just move all snake collision and food generation and stuff server side
@@ -86,13 +88,16 @@ public class ServerService implements Runnable {
     }
 
     public synchronized void addUpdate(ClientHandler player, ArrayList<Cell> update) {
+        playersReady++;
         System.out.println(update.toString());
         updatedCells.put(player, update);
-        if (updatedCells.size() == playersAlive.size()) {
+        if (playersReady == playersAlive.size()) {
+            playersReady = 0;
             this.notify();
         }
     }
 
+    // there's probably a o(n) way to do this but doesn't matter much, size is going to be so small anyways
     public void sendUpdatedCells() {
         for (ClientHandler receiver: playersAlive) {
             ArrayList<Cell> totalUpdate = new ArrayList<Cell>();
@@ -110,7 +115,6 @@ public class ServerService implements Runnable {
     @Override
     public void run() {
         while (clients.size() < maxPlayers) {
-            System.out.println("start");
             System.out.println("[SERVER] Waiting for connection...");
             Socket client = null;
             try {
@@ -126,26 +130,21 @@ public class ServerService implements Runnable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            System.out.println("handling!");
             clients.add(clientThread);
             playersAlive.add(clientThread);
-            System.out.println("starting thread");
             new Thread(clientThread).start();   // Not using thread pool, since construction will only occur at start
-            System.out.println("end");
-            System.out.println(clients.size());
         }
 
-        System.out.println("starting");
+        System.out.println("Initializing Game");
 
         initializeGame();
 
-        System.out.println("done");
-
+        System.out.println("Game starting!");
         while (playersAlive.size() != 0) {
             synchronized (this) {
                 try {
                     this.wait();
-                    System.out.println("notified now sending updated cells");
+                    System.out.println("Notified now sending updated cells");
                     sendUpdatedCells();
                 } catch (InterruptedException e) {
                     e.printStackTrace();

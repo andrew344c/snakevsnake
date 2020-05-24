@@ -19,7 +19,7 @@ import java.util.ArrayList;
  * TODO: Improve GUI (Currently Basic Grid)
  * TODO: Implement multi-player support
  *
- * @author Andrew
+ * @author Andrew, Richard
  */
 public class GamePanel extends JPanel implements ActionListener {
 
@@ -83,6 +83,7 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void updateGuiGrid(ArrayList<Cell> changedLocations) {
+        System.out.println("Updating GUI Grid: " + changedLocations);
         for (Cell cell : changedLocations) {
             if (cell.hasSnakeHeadRight()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(headRight);

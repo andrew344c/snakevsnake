@@ -45,7 +45,7 @@ public class Game {
         try {
             player.update();
         } catch (SnakeOutOfBoundsException ignored) {}
-        player.getHead().setSnakeHeadUp(true);
+        player.getHead().setSnake(true);
         updatedCells.add(player.getHead());
         updatedCells.add(grid.generateFood());
     }
@@ -60,8 +60,9 @@ public class Game {
 
         //Wait for initial updates from server
         Object[] snakeAndGridAndUpdate = server.initializeGame();    //blocking
+        Cell start = (Cell)snakeAndGridAndUpdate[0];
         grid = (Grid)snakeAndGridAndUpdate[1];
-        player = new Snake((Cell)snakeAndGridAndUpdate[0], grid);
+        player = new Snake((grid.at(start.getX(), start.getY())), grid);
         updatedCells = (ArrayList<Cell>)snakeAndGridAndUpdate[2];
         System.out.println(updatedCells);
         //Continue listening for server updates
@@ -135,10 +136,12 @@ public class Game {
         }
 
         // Send food update to server and also receive updates from server (these update could be dead snakes and food)
-        if (server != null) {
+        if (server != null && !lost) {
             // Send food
             if (food != null) {
                 server.send(new ArrayList<Cell>(Collections.singletonList(food)));
+            }else {
+                server.send(new ArrayList<>());
             }
 
             // Wait for and update from server
@@ -169,12 +172,14 @@ public class Game {
             System.out.println("Waiting for update");
             synchronized (this) {
                 this.wait();
+                update = server.getUpdate();
             }
         }
-        System.out.println("Received update");
+
+        System.out.println("Received update of " + update);
 
         // Add update to server
-        for (Cell cell: server.getUpdate()) {
+        for (Cell cell: update) {
             updatedCells.add(cell);
             grid.updateCell(cell);
         }

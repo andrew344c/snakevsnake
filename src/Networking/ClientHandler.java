@@ -11,7 +11,6 @@ import java.util.ArrayList;
 
 /**
  * Handler for client
- * TODO: Error handling when socket goes down, etc.
  *
  * @author Andrew
  */
@@ -42,6 +41,31 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    public void receive() throws IOException, ClassNotFoundException {
+        Object msg = in.readObject();   //Receive Object
+        System.out.println("Received: " + msg.toString() + " From: " + client.toString());
+        if (msg instanceof String) {    //Either chat or special keyword
+
+            String message = ((String)msg).substring(3);
+            String type = ((String)msg).substring(0, 3);
+
+            if (type.equals(TYPE_SPECIAL)) { //Special Keyword
+                if (message.equals("LOST")) {
+                    server.losePlayer(this);
+                }else if (message.equals("CONTINUE")) {
+                    //we good
+                }
+            }else if (type.equals(TYPE_CHAT)) { //Chat
+
+            }
+        }else if (msg instanceof ArrayList){
+            ArrayList<Cell> update = (ArrayList<Cell>)msg;
+            server.addUpdate(this, update);
+        }else {
+            throw new ClassNotFoundException();
+        }
+    }
+
     /**
      * Listen for client
      */
@@ -50,30 +74,7 @@ public class ClientHandler implements Runnable {
     public void run() {
         try {
             while (true) {
-                Object msg = in.readObject();   //Receive Object
-                System.out.println("Received: " + msg.toString() + " From: " + client.toString());
-                if (msg instanceof String) {    //Either chat or special keyword
-
-                    String message = ((String)msg).substring(3);
-                    String type = ((String)msg).substring(0, 3);
-
-                    if (type.equals(TYPE_SPECIAL)) { //Special Keyword
-                        if (message.equals("LOST")) {
-                            server.losePlayer(this);
-                        }else if (message.equals("CONTINUE")) {
-                            //we good
-                        }
-                    }else if (type.equals(TYPE_CHAT)) { //Chat
-
-                    }
-                }else if (msg instanceof ArrayList){
-                    ArrayList<Cell> update = (ArrayList<Cell>)msg;
-                    server.addUpdate(this, update);
-                }else if (msg == null){
-                    break;
-                }else {
-                    throw new ClassNotFoundException();
-                }
+                receive();
             }
         } catch (IOException e) {
             server.removeClient(this);
@@ -83,7 +84,7 @@ public class ClientHandler implements Runnable {
             try {
                 in.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                e.printStackTrace();    // impossible to happen i think
             }
             try {
                 out.close();
