@@ -16,8 +16,6 @@ import java.util.ArrayList;
  * Gui representation of game grid
  * Listens for keystrokes here for snake control
  *
- * TODO: Improve GUI (Currently Basic Grid)
- * TODO: Implement multi-player support
  *
  * @author Andrew, Richard
  */
@@ -27,6 +25,9 @@ public class GamePanel extends JPanel implements ActionListener {
     private static final int DELAY = 125;
     private Timer timer;
     private Game game;
+
+    private static final int CELL_SIZE = 25;
+    private static final Color BACKGROUND_COLOR = Color.WHITE;
 
     private final ImageIcon body = new ImageIcon("resources/snakeBody.png");
     private final ImageIcon headDown = new ImageIcon("resources/snakeDown.png");
@@ -41,11 +42,12 @@ public class GamePanel extends JPanel implements ActionListener {
 
     public GamePanel(int rows, int cols) {
         //Setup gui grid
+        //setPreferredSize(new Dimension(getWidth(), getHeight()));
         setLayout(new GridLayout(rows, cols));
         gridWindow = new CellView[rows][cols];
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                gridWindow[i][j] = new CellView(Color.BLACK, false);
+                gridWindow[i][j] = new CellView(BACKGROUND_COLOR, false);
                 add(gridWindow[i][j]);
             }
         }
@@ -54,7 +56,12 @@ public class GamePanel extends JPanel implements ActionListener {
         game = new Game(rows, cols, this);
         updateGuiGrid(game.getUpdates());
 
-        addKeyListener(new ControllerAdapter());
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                game.keyPressed(e);
+            }
+        });
         setFocusable(true);
 
         timer = new Timer(DELAY, this);
@@ -75,7 +82,12 @@ public class GamePanel extends JPanel implements ActionListener {
         }
         updateGuiGrid(game.getUpdates());
 
-        addKeyListener(new ControllerAdapter());
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                game.keyPressed(e);
+            }
+        });
         setFocusable(true);
 
         timer = new Timer(DELAY, this);
@@ -83,41 +95,29 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void updateGuiGrid(ArrayList<Cell> changedLocations) {
-        System.out.println("Updating GUI Grid: " + changedLocations);
         for (Cell cell : changedLocations) {
             if (cell.hasSnakeHeadRight()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(headRight);
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             } else if (cell.hasSnakeHeadLeft()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(headLeft);
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             } else if (cell.hasSnakeHeadUp()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(headUp);
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             } else if (cell.hasSnakeHeadDown()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(headDown);
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             } else if (cell.hasSnakeBiteUp()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(biteUp);
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             } else if (cell.hasSnakeBiteRight()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(biteRight);
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             } else if (cell.hasSnakeBiteDown()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(biteDown);
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             } else if (cell.hasSnakeBiteLeft()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(biteLeft);
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             } else if (cell.hasSnake()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(body);
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             } else if (cell.hasFood()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(apple);
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             } else {
                 gridWindow[cell.getY()][cell.getX()].setIcon(null);
-                gridWindow[cell.getY()][cell.getX()].setColor(Color.BLACK);
             }
         }
     }
@@ -136,7 +136,6 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     private static class CellView extends JLabel {
-        private static final int CELL_SIZE = 25;
         private static final int BORDER_SIZE = 1;
 
         public CellView(Color color, boolean gridLines) {
@@ -153,13 +152,9 @@ public class GamePanel extends JPanel implements ActionListener {
         }
     }
 
-    private class ControllerAdapter extends KeyAdapter {
-        @Override
-        public void keyPressed(KeyEvent e) {
-            game.keyPressed(e);
-        }
+    public void setScoreUpdateListener(ScoreUpdateListener listener) {
+        game.setScoreUpdateListener(listener);
     }
-
 
     /**
      * Called when game finishes, ends the game loop

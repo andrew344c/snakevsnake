@@ -53,8 +53,6 @@ public class ClientService implements Runnable {
 
     // add in some way to confirm that cell has been sent
     public void send(Object obj) {
-        System.out.print("Sending: ");
-        System.out.println(obj.toString());
         try {
             out.writeObject(obj);
             out.reset(); //clear cache, without it deserializes wrong reference of object
@@ -78,8 +76,6 @@ public class ClientService implements Runnable {
         try {
             while (true) {
                 Object obj = in.readObject();
-                System.out.print("Received: ");
-                System.out.println(obj.toString());
                 if (obj instanceof String) {
                     // Will either be a chat message or a special message
                     // Chat will have "[C]" in beginning and special will have "[S]"

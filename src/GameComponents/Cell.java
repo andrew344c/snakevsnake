@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * Simple struct representing a cell in the grid
- * @author Andrew
+ * @author Andrew, Richard
  */
 public class Cell implements Serializable {
 

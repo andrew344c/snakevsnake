@@ -11,7 +11,7 @@ import java.awt.event.*;
 
 /**
  * Class representing snake
- * @author Andrew
+ * @author Andrew, Richard
  */
 public class Snake {
 
@@ -173,6 +173,7 @@ public class Snake {
         ArrayList<Cell> update = new ArrayList<Cell>();
         for (Cell cell: body) {
             cell.setSnake(false);
+            cell.setAllFalse();
             update.add(cell);
         }
         update.add(previousTail);
@@ -197,6 +198,10 @@ public class Snake {
                 }
             }
         }).start();
+    }
+
+    public int getScore() {
+        return body.size();
     }
 
 }

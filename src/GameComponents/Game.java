@@ -1,6 +1,8 @@
 package GameComponents;
 
 import GUI.GamePanel;
+import GUI.ScoreUpdateEvent;
+import GUI.ScoreUpdateListener;
 import Networking.ClientService;
 import Networking.SocketInexistentException;
 
@@ -26,6 +28,8 @@ public class Game {
 
     private final String LOST_SIGNAL = "[S]LOST";
     private final String CONTINUE_SIGNAL = "[S]CONTINUE";
+
+    private ScoreUpdateListener scoreUpdateListener;
 
     /**
      * Single-player constructor
@@ -64,7 +68,6 @@ public class Game {
         grid = (Grid)snakeAndGridAndUpdate[1];
         player = new Snake((grid.at(start.getX(), start.getY())), grid);
         updatedCells = (ArrayList<Cell>)snakeAndGridAndUpdate[2];
-        System.out.println(updatedCells);
         //Continue listening for server updates
         serverThread = new Thread(server);
         serverThread.start();
@@ -123,6 +126,7 @@ public class Game {
                         food = grid.generateFood();
                         player.ate = false;
                         updatedCells.add(food);
+                        fireScoreUpdateEvent(new ScoreUpdateEvent(this, player.getScore()));
                     }
                 } else {    // Bumped into snake
                     updatedCells = player.killSnake();
@@ -169,20 +173,25 @@ public class Game {
         // Wait for update from server
         ArrayList<Cell> update = server.getUpdate();
         if (update == null) {
-            System.out.println("Waiting for update");
             synchronized (this) {
                 this.wait();
                 update = server.getUpdate();
             }
         }
 
-        System.out.println("Received update of " + update);
-
         // Add update to server
         for (Cell cell: update) {
             updatedCells.add(cell);
             grid.updateCell(cell);
         }
+    }
+
+    public void setScoreUpdateListener(ScoreUpdateListener scoreUpdateListener) {
+        this.scoreUpdateListener = scoreUpdateListener;
+    }
+
+    public void fireScoreUpdateEvent(ScoreUpdateEvent event) {
+        scoreUpdateListener.scoreUpdateEventOccurred(event);
     }
 
     /**
