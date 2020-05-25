@@ -27,7 +27,7 @@ public class GameWindow extends JFrame {
         gc = new GridBagConstraints();
     }
 
-    public GameWindow(String ip, int port) {
+    public GameWindow(String ip, int port, String name) {
         initialize();
 
         score = new JLabel("Score: 1");
@@ -49,7 +49,7 @@ public class GameWindow extends JFrame {
         gameChatPanel.setSendMessageListener(new SendMessageListener() {
             @Override
             public void sendMessageEventOccurred(SendMessageEvent event) {
-                gamePanel.send(new ChatEvent(this, "Player", event.getSentMsg()));
+                gamePanel.send(new ChatEvent(this, name, event.getSentMsg()));
             }
         });
 
@@ -93,11 +93,5 @@ public class GameWindow extends JFrame {
         gc.gridx = 0;
         gc.gridy = 1;
         add(gamePanel, gc);
-    }
-
-
-    public static void main(String[] args) {
-        EventQueue.invokeLater(() -> new GameWindow("localhost", 5000));
-        //EventQueue.invokeLater(() -> new GameWindow(25, 25));
     }
 }
