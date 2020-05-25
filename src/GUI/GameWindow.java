@@ -1,5 +1,8 @@
 package GUI;
 
+import Networking.ChatEvent;
+import Networking.ChatListener;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -13,52 +16,82 @@ public class GameWindow extends JFrame {
     private JLabel score;
     private JLabel secondScore;
     private GamePanel gamePanel;
+    private GameChatPanel gameChatPanel;
+    private GridBagConstraints gc;
+
+
+    public void initialize() {
+        setResizable(false);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridBagLayout());
+        gc = new GridBagConstraints();
+    }
 
     public GameWindow(String ip, int port) {
-        gamePanel = new GamePanel(ip, port);
+        initialize();
+
         score = new JLabel("Score: 1");
-        construct();
+        gamePanel = new GamePanel(ip, port);
+        gamePanel.setChatListener(new ChatListener() {
+            @Override
+            public void chatEventOccurred(ChatEvent event) {
+                String msg = "<" + event.getSender() + "> " + event.getMsg() + "\n";
+                gameChatPanel.addToChat(msg);
+            }
+        });
+        gameChatPanel = new GameChatPanel(gamePanel.getPreferredSize());
+        gameChatPanel.setSendMessageListener(new SendMessageListener() {
+            @Override
+            public void sendMessageEventOccurred(SendMessageEvent event) {
+                gamePanel.send(new ChatEvent(this, "Player", event.getSentMsg()));
+            }
+        });
+
+        constructScore();
+        constructGamePanel();
+        // Chat Pane
+        gc.gridx = 1;
+        gc.gridy = 1;
+        add(gameChatPanel, gc);
+
+        pack();
+        setVisible(true);
     }
 
     public GameWindow(int rows, int cols) {
+        initialize();
+
         gamePanel = new GamePanel(rows, cols);
         score = new JLabel("Score: 1");
-        construct();
-    }
-
-    public void construct() {
         gamePanel.setScoreUpdateListener(new ScoreUpdateListener() {
             @Override
             public void scoreUpdateEventOccurred(ScoreUpdateEvent event) {
                 score.setText("Score: " + event.getNewScore());
             }
         });
-        setLayout(new GridBagLayout());
-        GridBagConstraints gc = new GridBagConstraints();
 
-        // Score
-        gc.anchor = GridBagConstraints.LINE_START;
-        gc.gridx = 0;
-        gc.gridy = 0;
-        add(score, gc);
-
-        // Second Score (High Score (Single-player) or Target Score (Multi-player))
-        //gc.anchor = GridBagConstraints.LINE_START;
-        //gc.gridx = 0;
-        //gc.gridy = 0;
-        //add(secondScore, gc);
-
-        // Game
-        gc.gridx = 0;
-        gc.gridy = 1;
-        add(gamePanel, gc);
-        setResizable(false);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        constructScore();
+        constructGamePanel();
         pack();
         setVisible(true);
     }
 
+    public void constructScore() {
+        gc.anchor = GridBagConstraints.LINE_START;
+        gc.gridx = 0;
+        gc.gridy = 0;
+        add(score, gc);
+    }
+
+    public void constructGamePanel() {
+        gc.gridx = 0;
+        gc.gridy = 1;
+        add(gamePanel, gc);
+    }
+
+
     public static void main(String[] args) {
-        EventQueue.invokeLater(() -> new GameWindow(25, 25));
+        EventQueue.invokeLater(() -> new GameWindow("localhost", 5000));
+        //EventQueue.invokeLater(() -> new GameWindow(25, 25));
     }
 }

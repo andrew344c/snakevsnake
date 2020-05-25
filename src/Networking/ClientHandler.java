@@ -44,19 +44,12 @@ public class ClientHandler implements Runnable {
     public void receive() throws IOException, ClassNotFoundException {
         Object msg = in.readObject();   //Receive Object
         System.out.println("Received: " + msg.toString() + " From: " + client.toString());
-        if (msg instanceof String) {    //Either chat or special keyword
-
-            String message = ((String)msg).substring(3);
-            String type = ((String)msg).substring(0, 3);
-
-            if (type.equals(TYPE_SPECIAL)) { //Special Keyword
-                if (message.equals("LOST")) {
-                    server.losePlayer(this);
-                }else if (message.equals("CONTINUE")) {
-                    //we good
-                }
-            }else if (type.equals(TYPE_CHAT)) { //Chat
-
+        if (msg instanceof ChatEvent) {
+            server.sendAll(msg);
+        } else if (msg instanceof SpecialEvent) {    //Either chat or special keyword
+            SpecialEvent event = (SpecialEvent)msg;
+            if (event.getType() == SpecialEvent.LOST) {
+                server.losePlayer(this);
             }
         }else if (msg instanceof ArrayList){
             ArrayList<Cell> update = (ArrayList<Cell>)msg;
@@ -76,11 +69,12 @@ public class ClientHandler implements Runnable {
             while (true) {
                 receive();
             }
-        } catch (IOException e) {
-            server.removeClient(this);
+        } catch (IOException ignored) {
+
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
+            server.removeClient(this);
             try {
                 in.close();
             } catch (IOException e) {

@@ -3,6 +3,7 @@ package Networking;
 import GameComponents.Cell;
 import GameComponents.Grid;
 
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -40,44 +41,6 @@ public class ServerService implements Runnable {
         playersReady = 0;
     }
 
-    //insanely stupid but good enough also i might just move all snake collision and food generation and stuff server side
-    //feeling really lazy so change this later
-    public void initializeGame() {
-        Grid grid = new Grid(rows, cols);
-        Random rand = new Random();
-        ArrayList<Cell> updatedLocations = new ArrayList<Cell>();
-
-        for (ClientHandler player: playersAlive) {
-            Cell possibleSpawn;
-            while (true) {
-                possibleSpawn = grid.at(rand.nextInt(cols), rand.nextInt(rows));
-                if (!possibleSpawn.hasSnake()) {
-                    possibleSpawn.setSnake(true);
-                    break;
-                }
-            }
-            updatedLocations.add(possibleSpawn);
-            player.send(possibleSpawn); //this will be that player snake's starting position
-        }
-
-        for (int i = 0; i < foodAmount; i++) {
-            Cell possibleSpawn;
-            while (true) {
-                possibleSpawn = grid.at(rand.nextInt(cols), rand.nextInt(rows));
-                if (!possibleSpawn.hasSnake() && !possibleSpawn.hasFood()) {
-                    possibleSpawn.setFood(true);
-                    break;
-                }
-            }
-            updatedLocations.add(possibleSpawn);
-        }
-
-        for (ClientHandler player: playersAlive) {
-            player.send(grid);
-            player.send(updatedLocations);
-        }
-    }
-
     public synchronized void losePlayer(ClientHandler player) {
         playersAlive.remove(player);
         updatedCells.remove(player);
@@ -94,6 +57,20 @@ public class ServerService implements Runnable {
         if (playersReady == playersAlive.size()) {
             playersReady = 0;
             this.notify();
+        }
+    }
+
+    public synchronized void sendChat(ClientHandler sender, ChatEvent chatEvent) {
+        for (ClientHandler client: clients) {
+            if (client != sender) {
+                client.send(chatEvent);
+            }
+        }
+    }
+
+    public void sendAll(Object obj) {
+        for (ClientHandler client: clients) {
+            client.send(obj);
         }
     }
 
@@ -114,6 +91,21 @@ public class ServerService implements Runnable {
 
     @Override
     public void run() {
+        // Initialize Game
+        Grid grid = new Grid(rows, cols);
+        ArrayList<Cell> updatedLocations = new ArrayList<Cell>();
+        ArrayList<Cell> possibleLocations = new ArrayList<Cell>();
+        for (Cell[] row: grid.getGrid()) {
+            possibleLocations.addAll(Arrays.asList(row));
+        }
+        Random rand = new Random(); // Used for food and spawn generation
+        // Generate Food
+        for (int i = 0; i < foodAmount; i++) {
+            Cell food = possibleLocations.remove(rand.nextInt(possibleLocations.size()));
+            food.setFood(true);
+            updatedLocations.add(food);
+        }
+
         while (clients.size() < maxPlayers) {
             System.out.println("[SERVER] Waiting for connection...");
             Socket client = null;
@@ -122,8 +114,8 @@ public class ServerService implements Runnable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            System.out.println("[SERVER] " + client.toString() + " Connected");
 
+            System.out.println("[SERVER] " + client.toString() + " Connected");
             ClientHandler clientThread = null;
             try {
                 clientThread = new ClientHandler(client, this);
@@ -132,14 +124,19 @@ public class ServerService implements Runnable {
             }
             clients.add(clientThread);
             playersAlive.add(clientThread);
+
+            // Upon connection send client info about grid and spawn; also update other clients of this client
+            Cell spawn = possibleLocations.remove(rand.nextInt(possibleLocations.size()));
+            spawn.setSnake(true);
+            clientThread.send(grid);
+            clientThread.send(spawn);
+            sendAll(spawn);
             new Thread(clientThread).start();   // Not using thread pool, since construction will only occur at start
         }
 
-        System.out.println("Initializing Game");
-
-        initializeGame();
-
         System.out.println("Game starting!");
+        sendAll(new SpecialEvent(this, SpecialEvent.START));
+
         while (playersAlive.size() != 0) {
             synchronized (this) {
                 try {

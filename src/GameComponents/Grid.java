@@ -68,6 +68,10 @@ public class Grid implements Serializable {
         return chosenCell;
     }
 
+    public Cell[][] getGrid() {
+        return grid;
+    }
+
     /**
      * For debugging uses
      * @return String representation of grid

@@ -10,7 +10,6 @@ import java.util.ArrayList;
 
 /**
  * Connects and transfer information between client and server
- * TODO: Error handling when server goes down, etc.
  * @author Andrew
  */
 public class ClientService implements Runnable {
@@ -21,6 +20,9 @@ public class ClientService implements Runnable {
     private ObjectOutputStream out;
     private ArrayList<Cell> update;
     private Game game;
+
+    private ChatListener chatListener;
+    private UpdateListener updateListener;
 
     private final static String TYPE_CHAT = "[C]";
     private final static String TYPE_SPECIAL = "[S]";
@@ -40,18 +42,16 @@ public class ClientService implements Runnable {
     }
 
     public Object[] initializeGame() {
-        Object[] snakeAndGridAndUpdate = new Object[3];
+        Object[] gridAndSnake = new Object[2];
         try {
-            snakeAndGridAndUpdate[0] = (Cell)in.readObject();
-            snakeAndGridAndUpdate[1] = (Grid)in.readObject();
-            snakeAndGridAndUpdate[2] = (ArrayList<Cell>)in.readObject();
+            gridAndSnake[0] = in.readObject();
+            gridAndSnake[1] = in.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        return snakeAndGridAndUpdate;
+        return gridAndSnake;
     }
 
-    // add in some way to confirm that cell has been sent
     public void send(Object obj) {
         try {
             out.writeObject(obj);
@@ -59,6 +59,11 @@ public class ClientService implements Runnable {
         }catch (IOException e) {
 
         }
+    }
+
+    public void lose(ArrayList<Cell> deadCells) {
+        send(new SpecialEvent(this, SpecialEvent.LOST));
+        send(deadCells);
     }
 
     public ArrayList<Cell> getUpdate() {
@@ -71,23 +76,39 @@ public class ClientService implements Runnable {
         game = lock;
     }
 
+    public void setChatListener(ChatListener chatListener) {
+        this.chatListener = chatListener;
+    }
+
+    public void fireChatEvent(ChatEvent chatEvent) {
+        chatListener.chatEventOccurred(chatEvent);
+    }
+
+    public void setUpdateListener(UpdateListener updateListener) {
+        this.updateListener = updateListener;
+    }
+
+    public void fireUpdateEvent(Cell cell) {
+        System.out.println("Update: " + cell);
+        updateListener.updateOccurred(cell);
+    }
+
+    public void fireSpecialEvent(SpecialEvent specialEvent) {
+        updateListener.specialEventOccurred(specialEvent);
+    }
+
     @Override
     public void run() {
         try {
             while (true) {
                 Object obj = in.readObject();
-                if (obj instanceof String) {
-                    // Will either be a chat message or a special message
-                    // Chat will have "[C]" in beginning and special will have "[S]"
-                    String msg = ((String)obj).substring(3);
-                    String type = ((String)obj).substring(0, 3);
-
-                    if (type.equals(TYPE_SPECIAL)) {
-                        if (msg.equals("WIN")) {
-
-                        }
-                    }
-                }else if (obj instanceof ArrayList) {
+                if (obj instanceof ChatEvent) {
+                    fireChatEvent((ChatEvent)obj);
+                } else if (obj instanceof Cell) {   // Only happens during initialization phase
+                    fireUpdateEvent((Cell)obj);
+                } else if (obj instanceof SpecialEvent) {
+                    fireSpecialEvent((SpecialEvent)obj);
+                } else if (obj instanceof ArrayList) {
                     update = (ArrayList<Cell>)obj;
                     game.updateReady();
                 }

@@ -3,11 +3,9 @@ package GameComponents;
 import GUI.GamePanel;
 import GUI.ScoreUpdateEvent;
 import GUI.ScoreUpdateListener;
-import Networking.ClientService;
-import Networking.SocketInexistentException;
+import Networking.*;
 
 import java.awt.event.KeyEvent;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,9 +23,6 @@ public class Game {
     private ArrayList<Cell> updatedCells;
     private boolean lost;
     private GamePanel guiPanel;
-
-    private final String LOST_SIGNAL = "[S]LOST";
-    private final String CONTINUE_SIGNAL = "[S]CONTINUE";
 
     private ScoreUpdateListener scoreUpdateListener;
 
@@ -57,18 +52,23 @@ public class Game {
     public Game(String ip, int port, GamePanel panel) {
         guiPanel = panel;
         lost = false;
+        updatedCells = new ArrayList<Cell>();
 
         //Setup connection to server
         server = new ClientService(ip, port);
         server.setLock(this);
 
-        //Wait for initial updates from server
-        Object[] snakeAndGridAndUpdate = server.initializeGame();    //blocking
-        Cell start = (Cell)snakeAndGridAndUpdate[0];
-        grid = (Grid)snakeAndGridAndUpdate[1];
+        Object[] gridAndSnake = server.initializeGame();
+        grid = (Grid)gridAndSnake[0];
+        Cell start = (Cell)gridAndSnake[1];
         player = new Snake((grid.at(start.getX(), start.getY())), grid);
-        updatedCells = (ArrayList<Cell>)snakeAndGridAndUpdate[2];
-        //Continue listening for server updates
+
+        for (Cell[] row: grid.getGrid()) {
+            updatedCells.addAll(Arrays.asList(row));
+        }
+    }
+
+    public void startListening() {
         serverThread = new Thread(server);
         serverThread.start();
     }
@@ -100,8 +100,7 @@ public class Game {
         // Sends and updates cell info to/from server
         if (server != null) {
             if (lost) {
-                server.send(LOST_SIGNAL);
-                server.send(updatedCells);  // Updated Cells is updated in killSnake call
+                server.lose(updatedCells); // Updated Cells is updated in killSnake call
             }else {
                 //sketchy dush
                 //sending "projection" of head and then changing back
@@ -132,8 +131,7 @@ public class Game {
                     updatedCells = player.killSnake();
                     lost = true;
                     if (server != null) {
-                        server.send(LOST_SIGNAL);
-                        server.send(updatedCells);
+                        server.lose(updatedCells);
                     }
                 }
             }
@@ -192,6 +190,18 @@ public class Game {
 
     public void fireScoreUpdateEvent(ScoreUpdateEvent event) {
         scoreUpdateListener.scoreUpdateEventOccurred(event);
+    }
+
+    public void setChatListener(ChatListener chatListener) {
+        server.setChatListener(chatListener);
+    }
+
+    public void setUpdateListener(UpdateListener updateListener) {
+        server.setUpdateListener(updateListener);
+    }
+
+    public void send(ChatEvent event) {
+        server.send(event);
     }
 
     /**

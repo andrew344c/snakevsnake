@@ -2,7 +2,7 @@ package GUI;
 
 import GameComponents.Cell;
 import GameComponents.Game;
-import Networking.SocketInexistentException;
+import Networking.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,6 +11,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Gui representation of game grid
@@ -70,18 +72,35 @@ public class GamePanel extends JPanel implements ActionListener {
 
     public GamePanel(String ip, int port) {
         game = new Game(ip, port, this);
+        game.setUpdateListener(new UpdateListener() {
+            @Override
+            public void updateOccurred(Cell update) {
+                updateGuiGrid(new ArrayList<Cell>(Collections.singletonList(update)));
+            }
+
+            @Override
+            public void specialEventOccurred(SpecialEvent event) {
+                if (event.getType() == SpecialEvent.START) {
+                    start();
+                }
+            }
+
+        });
         int rows = game.getRows();
         int cols = game.getCols();
         setLayout(new GridLayout(rows, cols));
         gridWindow = new CellView[rows][cols];
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                gridWindow[i][j] = new CellView(Color.BLACK, false);
+                gridWindow[i][j] = new CellView(BACKGROUND_COLOR, false);
                 add(gridWindow[i][j]);
             }
         }
         updateGuiGrid(game.getUpdates());
+        game.startListening();
+    }
 
+    public void start() {
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -95,6 +114,7 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void updateGuiGrid(ArrayList<Cell> changedLocations) {
+        System.out.println(changedLocations);
         for (Cell cell : changedLocations) {
             if (cell.hasSnakeHeadRight()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(headRight);
@@ -113,6 +133,7 @@ public class GamePanel extends JPanel implements ActionListener {
             } else if (cell.hasSnakeBiteLeft()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(biteLeft);
             } else if (cell.hasSnake()) {
+                System.out.println(gridWindow[cell.getY()][cell.getX()]);
                 gridWindow[cell.getY()][cell.getX()].setIcon(body);
             } else if (cell.hasFood()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(apple);
@@ -154,6 +175,14 @@ public class GamePanel extends JPanel implements ActionListener {
 
     public void setScoreUpdateListener(ScoreUpdateListener listener) {
         game.setScoreUpdateListener(listener);
+    }
+
+    public void setChatListener(ChatListener chatListener) {
+        game.setChatListener(chatListener);
+    }
+
+    public void send(ChatEvent event) {
+        game.send(event);
     }
 
     /**
