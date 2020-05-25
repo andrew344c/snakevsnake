@@ -58,16 +58,7 @@ public class GamePanel extends JPanel implements ActionListener {
         game = new Game(rows, cols, this);
         updateGuiGrid(game.getUpdates());
 
-        addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                game.keyPressed(e);
-            }
-        });
-        setFocusable(true);
-
-        timer = new Timer(DELAY, this);
-        timer.start();
+        start();
     }
 
     public GamePanel(String ip, int port) {
@@ -114,7 +105,6 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void updateGuiGrid(ArrayList<Cell> changedLocations) {
-        System.out.println(changedLocations);
         for (Cell cell : changedLocations) {
             if (cell.hasSnakeHeadRight()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(headRight);
@@ -133,7 +123,6 @@ public class GamePanel extends JPanel implements ActionListener {
             } else if (cell.hasSnakeBiteLeft()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(biteLeft);
             } else if (cell.hasSnake()) {
-                System.out.println(gridWindow[cell.getY()][cell.getX()]);
                 gridWindow[cell.getY()][cell.getX()].setIcon(body);
             } else if (cell.hasFood()) {
                 gridWindow[cell.getY()][cell.getX()].setIcon(apple);

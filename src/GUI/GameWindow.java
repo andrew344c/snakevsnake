@@ -32,6 +32,12 @@ public class GameWindow extends JFrame {
 
         score = new JLabel("Score: 1");
         gamePanel = new GamePanel(ip, port);
+        gamePanel.setScoreUpdateListener(new ScoreUpdateListener() {
+            @Override
+            public void scoreUpdateEventOccurred(ScoreUpdateEvent event) {
+                score.setText("Score: " + event.getNewScore());
+            }
+        });
         gamePanel.setChatListener(new ChatListener() {
             @Override
             public void chatEventOccurred(ChatEvent event) {

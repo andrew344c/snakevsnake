@@ -89,7 +89,6 @@ public class ClientService implements Runnable {
     }
 
     public void fireUpdateEvent(Cell cell) {
-        System.out.println("Update: " + cell);
         updateListener.updateOccurred(cell);
     }
 
