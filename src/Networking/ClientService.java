@@ -1,7 +1,6 @@
 package Networking;
 import GameComponents.Cell;
 import GameComponents.Game;
-import GameComponents.Grid;
 
 
 import java.io.*;
@@ -22,13 +21,13 @@ public class ClientService implements Runnable {
     private Game game;
 
     private ChatListener chatListener;
-    private UpdateListener updateListener;
+    private ServerListener serverListener;
+    private ServerConnectionListener serverConnectionListener;
 
-    private final static String TYPE_CHAT = "[C]";
-    private final static String TYPE_SPECIAL = "[S]";
-    private final String LOST_SIGNAL = "[S]LOST";
+    private boolean spectateMode;
 
-    public ClientService(String ip, int port) {
+    public ClientService(String ip, int port, String name) {
+        spectateMode = false;
         IP = ip;
         PORT = port;
         try {
@@ -39,6 +38,12 @@ public class ClientService implements Runnable {
             e.printStackTrace();
         }
         update = null;
+        try {
+            out.writeObject(name);
+            out.reset();
+        } catch (IOException e) {
+
+        }
     }
 
     public Object[] initializeGame() {
@@ -52,18 +57,62 @@ public class ClientService implements Runnable {
         return gridAndSnake;
     }
 
-    public void send(Object obj) {
+    /**
+     * Sends object over to server
+     * (Made synchronized since is used for Game Updates and also Chat, so there's possibility of accessing at same time)
+     * @param obj
+     */
+    public synchronized void sendUpdate(Object obj) {
         try {
             out.writeObject(obj);
-            out.reset(); //clear cache, without it deserializes wrong reference of object
+            out.writeObject(new GameStateEvent(this, GameStateEvent.READY));
+            out.reset(); //clear cache, without it deserializes wrong reference of object later on
         }catch (IOException e) {
 
         }
     }
 
-    public void lose(ArrayList<Cell> deadCells) {
-        send(new SpecialEvent(this, SpecialEvent.LOST));
-        send(deadCells);
+    public synchronized void sendChat(ChatEvent chat) {
+        try {
+            out.writeObject(chat);  // This chat event reference will not be reused, no need to reset cache
+        }catch (IOException e) {
+
+        }
+    }
+
+    /**
+     * Called when player loses, sends dead cells of snake and lost event
+     * (Made synchronized since if user abruptly disconnects and loses at the same time, this method may be called at same time)
+     * @param deadCells
+     */
+    public synchronized void lose(ArrayList<Cell> deadCells) {
+        try {
+            out.writeObject(deadCells);
+            out.writeObject(new GameStateEvent(this, GameStateEvent.LOST));
+            out.writeObject(new GameStateEvent(this, GameStateEvent.READY));
+            out.reset();
+        } catch (IOException e) {
+
+        }
+    }
+
+    public synchronized void win() {
+        try {
+            out.writeObject(new GameStateEvent(this, GameStateEvent.WIN));
+            // No need to reset here
+        } catch (IOException e) {
+
+        }
+    }
+
+    public void disconnect(ArrayList<Cell> deadCells) {
+        try {
+            out.writeObject(deadCells);
+            out.writeObject(new ServerConnectionEvent(this, ServerConnectionEvent.EXPECTED_DISCONNECT));
+            out.reset();
+        }catch (IOException e) {
+
+        }
     }
 
     public ArrayList<Cell> getUpdate() {
@@ -80,20 +129,32 @@ public class ClientService implements Runnable {
         this.chatListener = chatListener;
     }
 
+    public void setServerConnectionListener(ServerConnectionListener serverConnectionListener) {
+        this.serverConnectionListener = serverConnectionListener;
+    }
+
     public void fireChatEvent(ChatEvent chatEvent) {
         chatListener.chatEventOccurred(chatEvent);
     }
 
-    public void setUpdateListener(UpdateListener updateListener) {
-        this.updateListener = updateListener;
+    public void setServerListener(ServerListener serverListener) {
+        this.serverListener = serverListener;
     }
 
     public void fireUpdateEvent(Cell cell) {
-        updateListener.updateOccurred(cell);
+        serverListener.updateOccurred(cell);
     }
 
-    public void fireSpecialEvent(SpecialEvent specialEvent) {
-        updateListener.specialEventOccurred(specialEvent);
+    public void fireUpdateEvent(ArrayList<Cell> cells) {
+        serverListener.updateOccurred(cells);
+    }
+
+    public void fireSpecialEvent(GameStateEvent gameStateEvent) {
+        serverListener.gameStateEventOccurred(gameStateEvent);
+    }
+
+    public void spectateMode() {
+        spectateMode = true;
     }
 
     @Override
@@ -105,15 +166,19 @@ public class ClientService implements Runnable {
                     fireChatEvent((ChatEvent)obj);
                 } else if (obj instanceof Cell) {   // Only happens during initialization phase
                     fireUpdateEvent((Cell)obj);
-                } else if (obj instanceof SpecialEvent) {
-                    fireSpecialEvent((SpecialEvent)obj);
+                } else if (obj instanceof GameStateEvent) {
+                    fireSpecialEvent((GameStateEvent)obj);
                 } else if (obj instanceof ArrayList) {
-                    update = (ArrayList<Cell>)obj;
-                    game.updateReady();
+                    if (spectateMode) { // During "spectate" mode, just directly pass update to GUI
+                        fireUpdateEvent((ArrayList<Cell>)obj);
+                    }else { // Otherwise, call updateReady for Game to handle update
+                        update = (ArrayList<Cell>) obj;
+                        game.updateReady();
+                    }
                 }
             }
         } catch (IOException e) {
-            game.endGame("There was an error with the connection to the server");
+
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } finally {

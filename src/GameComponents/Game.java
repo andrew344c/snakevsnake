@@ -1,6 +1,5 @@
 package GameComponents;
 
-import GUI.GamePanel;
 import GUI.ScoreUpdateEvent;
 import GUI.ScoreUpdateListener;
 import Networking.*;
@@ -21,8 +20,7 @@ public class Game {
     private ClientService server;
     private Thread serverThread;
     private ArrayList<Cell> updatedCells;
-    private boolean lost;
-    private GamePanel guiPanel;
+    private boolean lost;   // Only used in single player
 
     private ScoreUpdateListener scoreUpdateListener;
 
@@ -32,8 +30,7 @@ public class Game {
      * @param rows
      * @param cols
      */
-    public Game(int rows, int cols, GamePanel panel) {
-        guiPanel = panel;
+    public Game(int rows, int cols) {
         //Initialize grid, snake, and updated cells
         grid = new Grid(rows, cols);
         player = new Snake(grid.at(cols / 2, rows / 2), grid);
@@ -49,14 +46,13 @@ public class Game {
         updatedCells.add(grid.generateFood());
     }
 
-    public Game(String ip, int port, GamePanel panel) {
-        guiPanel = panel;
+    public Game(String ip, int port, String name) {
         lost = false;
         updatedCells = new ArrayList<Cell>();
 
         //Setup connection to server
-        server = new ClientService(ip, port);
-        server.setLock(this);
+        server = new ClientService(ip, port, name);
+        server.setLock(this);   // Used for blocking the game while waiting for updates
 
         Object[] gridAndSnake = server.initializeGame();
         grid = (Grid)gridAndSnake[0];
@@ -87,8 +83,8 @@ public class Game {
         player.keyPressed(e);
     }
 
-    //idk what happened code got really messy, fix it up later
-    public void update() throws InterruptedException, SocketInexistentException {
+
+    public void update() throws InterruptedException {
         // Update snake body (Will also update tail in grid directly in update call, but head will not be updated in grid)
         try {
             updatedCells = player.update(); //Will return all cells that need to be updated
@@ -102,11 +98,11 @@ public class Game {
             if (lost) {
                 server.lose(updatedCells); // Updated Cells is updated in killSnake call
             }else {
-                //sketchy dush
                 //sending "projection" of head and then changing back
+                //Cannot directly move head, since we need the updates from server first to see if the move is legal or not
                 boolean previous = player.getHead().hasSnake();
                 player.getHead().setSnake(true);
-                server.send(updatedCells);
+                server.sendUpdate(updatedCells);
                 player.getHead().setSnake(previous);
             }
 
@@ -114,10 +110,9 @@ public class Game {
             acceptUpdate();
         }
 
-        // Food generation: if client eats food, is responsible for generating new food and sends to server
+        // Snake Collision and Food generation: if client eats food, is responsible for generating new food and sends to server
         Cell food = null;
         if (!lost) {
-            // Food generation and snake collision
             if (player.isMoving()) {
                 if (!player.getHead().hasSnake()) { // Not colliding into snake
                     player.getHead().setSnake(true);    // If no snake in front, approve snake head's location other wise send lost signal
@@ -141,16 +136,16 @@ public class Game {
         if (server != null && !lost) {
             // Send food
             if (food != null) {
-                server.send(new ArrayList<Cell>(Collections.singletonList(food)));
+                server.sendUpdate(new ArrayList<Cell>(Collections.singletonList(food)));
             }else {
-                server.send(new ArrayList<>());
+                server.sendUpdate(new ArrayList<>());
             }
-
-            // Wait for and update from server
-            acceptUpdate();
         }
 
-        if (lost) {
+        // Wait for and update from server
+        acceptUpdate();
+
+        if (lost && server != null) {
             throw new InterruptedException();
         }
     }
@@ -196,20 +191,25 @@ public class Game {
         server.setChatListener(chatListener);
     }
 
-    public void setUpdateListener(UpdateListener updateListener) {
-        server.setUpdateListener(updateListener);
+    public void setUpdateListener(ServerListener serverListener) {
+        server.setServerListener(serverListener);
     }
 
-    public void send(ChatEvent event) {
-        server.send(event);
+    public void setServerConnectionListener(ServerConnectionListener serverConnectionListener) {
+        server.setServerConnectionListener(serverConnectionListener);
     }
 
+    public void sendChat(ChatEvent event) {
+        server.sendChat(event);
+    }
+
+    public void disconnect() {
+        server.disconnect(player.killSnake());
+    }
     /**
      * Called when game finishes, ends the game loop
-     *
-     * @param endMessage reason for game ending
      */
-    public void endGame(String endMessage) {
-
+    public void spectateMode() {
+        server.spectateMode();
     }
 }

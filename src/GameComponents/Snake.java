@@ -16,7 +16,7 @@ import java.awt.event.*;
 public class Snake {
 
     private Grid grid;
-    private LinkedList<Cell> body; //Game.Cell is deliberately not used
+    private LinkedList<Cell> body;
     private int dx;
     private int dy;
     private boolean choseDirection;
@@ -34,6 +34,7 @@ public class Snake {
         this.grid = grid;
         body = new LinkedList<Cell>();
         body.addFirst(head);
+        previousTail = head;
         dx = dy = 0;
         choseDirection = false;
         ate = false;

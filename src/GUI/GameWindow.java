@@ -2,9 +2,13 @@ package GUI;
 
 import Networking.ChatEvent;
 import Networking.ChatListener;
+import Networking.ServerConnectionEvent;
+import Networking.ServerConnectionListener;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 /**
  * Window for game
@@ -22,16 +26,24 @@ public class GameWindow extends JFrame {
 
     public void initialize() {
         setResizable(false);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridBagLayout());
         gc = new GridBagConstraints();
     }
 
     public GameWindow(String ip, int port, String name) {
         initialize();
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                System.out.println("ayo");
+                gamePanel.disconnect();
+                dispose();
+            }
+        });
+
 
         score = new JLabel("Score: 1");
-        gamePanel = new GamePanel(ip, port);
+        gamePanel = new GamePanel(ip, port, name);
         gamePanel.setScoreUpdateListener(new ScoreUpdateListener() {
             @Override
             public void scoreUpdateEventOccurred(ScoreUpdateEvent event) {
@@ -45,11 +57,23 @@ public class GameWindow extends JFrame {
                 gameChatPanel.addToChat(msg);
             }
         });
+        gamePanel.setServerConnectionListener(new ServerConnectionListener() {
+            @Override
+            public void connectionEventOccurred(ServerConnectionEvent event) {
+                if (event.getType() == ServerConnectionEvent.EXPECTED_DISCONNECT) {
+
+                } else if (event.getType() == ServerConnectionEvent.UNEXPECTED_DISCONNECT) {
+
+                } else if (event.getType() == ServerConnectionEvent.UNSUCCESSFUL_CONNECTION_ATTEMPT) {
+
+                }
+            }
+        });
         gameChatPanel = new GameChatPanel(gamePanel.getPreferredSize());
         gameChatPanel.setSendMessageListener(new SendMessageListener() {
             @Override
             public void sendMessageEventOccurred(SendMessageEvent event) {
-                gamePanel.send(new ChatEvent(this, name, event.getSentMsg()));
+                gamePanel.sendChat(new ChatEvent(this, name, event.getSentMsg()));
             }
         });
 
@@ -66,6 +90,7 @@ public class GameWindow extends JFrame {
 
     public GameWindow(int rows, int cols) {
         initialize();
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         gamePanel = new GamePanel(rows, cols);
         score = new JLabel("Score: 1");

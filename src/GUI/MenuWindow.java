@@ -22,6 +22,8 @@ public class MenuWindow extends JFrame {
                 getContentPane().removeAll();
                 constructSingleplayerForm();
                 pack();
+                revalidate();
+                repaint();
             }
         });
         multiplayer.addActionListener(new ActionListener() {
@@ -30,9 +32,13 @@ public class MenuWindow extends JFrame {
                 getContentPane().removeAll();
                 constructMultiplayerForm();
                 pack();
+                revalidate();
+                repaint();
             }
         });
 
+        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+        setPreferredSize(new Dimension(screen.width /3, screen.height /3));
         add(singleplayer);
         add(multiplayer);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -63,7 +69,7 @@ public class MenuWindow extends JFrame {
 
         gc.gridx = 1;
         gc.gridy = 2;
-        JButton submit = new JButton("Submit");
+        JButton submit = new JButton("Play");
         submit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -96,7 +102,7 @@ public class MenuWindow extends JFrame {
 
         gc.gridx = 0;
         gc.gridy = 2;
-        add(new JLabel("Name: "), gc);
+        add(new JLabel("Display Name: "), gc);
 
         gc.gridx = 1;
         gc.gridy = 2;
@@ -106,7 +112,7 @@ public class MenuWindow extends JFrame {
 
         gc.gridx = 1;
         gc.gridy = 3;
-        JButton submit = new JButton("Go");
+        JButton submit = new JButton("Play");
         submit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

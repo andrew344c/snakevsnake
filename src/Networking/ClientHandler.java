@@ -15,20 +15,20 @@ import java.util.ArrayList;
  * @author Andrew
  */
 public class ClientHandler implements Runnable {
+
     public Socket client;
     private ObjectInputStream in;
     private ObjectOutputStream out;
     private ServerService server;
+    private String clientName;
 
-    private boolean onSpecial;  // When true: looking for special keyword, When false: looking for cell
-    private final static String TYPE_CHAT = "[C]";
-    private final static String TYPE_SPECIAL = "[S]";
 
-    public ClientHandler(Socket client, ServerService server) throws IOException {
+    public ClientHandler(Socket client, ServerService server) throws IOException, ClassNotFoundException {
         this.client = client;
         this.server = server;
         out = new ObjectOutputStream(client.getOutputStream());
         in = new ObjectInputStream(client.getInputStream());
+        clientName = (String)in.readObject();
     }
 
     public void send(Object obj) {
@@ -41,38 +41,56 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    public String getName() {
+        return clientName;
+    }
+
+    /**
+     * Handles received objects from client
+     * @throws IOException Client Disconnects
+     * @throws ClassNotFoundException Shouldn't Happen
+     */
     public void receive() throws IOException, ClassNotFoundException {
-        Object msg = in.readObject();   //Receive Object
+        Object msg = in.readObject();   // Receive Object
         System.out.println("Received: " + msg.toString() + " From: " + client.toString());
-        if (msg instanceof ChatEvent) {
+        if (msg instanceof ChatEvent) { //Chat Message
             server.sendAll(msg);
-        } else if (msg instanceof SpecialEvent) {    //Either chat or special keyword
-            SpecialEvent event = (SpecialEvent)msg;
-            if (event.getType() == SpecialEvent.LOST) {
-                server.losePlayer(this);
+        } else if (msg instanceof GameStateEvent) {    // Either Lose or Win
+            GameStateEvent event = (GameStateEvent)msg;
+            if (event.getType() == GameStateEvent.LOST) {
+                server.playerLose(this);
+            } else if (event.getType() == GameStateEvent.READY){
+                server.playerReady();
+            } else if (event.getType() == GameStateEvent.WIN) {
+                server.playerWin(this);
             }
         }else if (msg instanceof ArrayList){
-            ArrayList<Cell> update = (ArrayList<Cell>)msg;
-            server.addUpdate(this, update);
-        }else {
-            throw new ClassNotFoundException();
+            if (!server.hasStarted()) { // This means the client disconnected before the game started and is sending dead spawn
+                server.sendAll(((ArrayList<Cell>) msg).get(0));
+            }else {
+                ArrayList<Cell> update = (ArrayList<Cell>) msg;
+                server.addUpdate(this, update);
+            }
+        }else if (msg instanceof ServerConnectionEvent) {
+            throw new IOException();
+        } else {
+            throw new ClassNotFoundException(msg.getClass().toString());
         }
     }
 
     /**
-     * Listen for client
+     * Listens for client messages and responds accordingly
      */
     @Override
-    //Client sending procedure: Send special keyword (signified by "[S]" in beginning) then send Cells
     public void run() {
         try {
             while (true) {
                 receive();
             }
         } catch (IOException ignored) {
-
+            // Client Disconnects
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            e.printStackTrace();    // Shouldn't happen
         } finally {
             server.removeClient(this);
             try {
