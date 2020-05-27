@@ -47,14 +47,17 @@ public class ClientService implements Runnable {
     }
 
     public Object[] initializeGame() {
-        Object[] gridAndSnake = new Object[2];
+        // The format will be [grid, snake spawn location (cell), goal score (int)]
+        // These will always be sent upon client's connection to the server
+        Object[] initializationData = new Object[3];
         try {
-            gridAndSnake[0] = in.readObject();
-            gridAndSnake[1] = in.readObject();
+            initializationData[0] = in.readObject();
+            initializationData[1] = in.readObject();
+            initializationData[2] = in.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        return gridAndSnake;
+        return initializationData;
     }
 
     /**

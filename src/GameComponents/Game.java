@@ -23,6 +23,7 @@ public class Game {
     private boolean lost;   // Only used in single player
 
     private ScoreUpdateListener scoreUpdateListener;
+    private int goal; // Only used in multi player
 
     /**
      * Single-player constructor
@@ -54,10 +55,12 @@ public class Game {
         server = new ClientService(ip, port, name);
         server.setLock(this);   // Used for blocking the game while waiting for updates
 
-        Object[] gridAndSnake = server.initializeGame();
-        grid = (Grid)gridAndSnake[0];
-        Cell start = (Cell)gridAndSnake[1];
+        // The format will be [grid, snake spawn location (cell), goal score (int)]
+        Object[] initializationUpdates = server.initializeGame();
+        grid = (Grid)initializationUpdates[0];
+        Cell start = (Cell)initializationUpdates[1];
         player = new Snake((grid.at(start.getX(), start.getY())), grid);
+        goal = (int)initializationUpdates[2];
 
         for (Cell[] row: grid.getGrid()) {
             updatedCells.addAll(Arrays.asList(row));
@@ -121,6 +124,9 @@ public class Game {
                         player.ate = false;
                         updatedCells.add(food);
                         fireScoreUpdateEvent(new ScoreUpdateEvent(this, player.getScore()));
+                        if (server != null && player.getScore() == goal) {
+                            server.win();
+                        }
                     }
                 } else {    // Bumped into snake
                     updatedCells = player.killSnake();
@@ -143,7 +149,9 @@ public class Game {
         }
 
         // Wait for and update from server
-        acceptUpdate();
+        if (server != null) {
+            acceptUpdate();
+        }
 
         if (lost && server != null) {
             throw new InterruptedException();
@@ -181,6 +189,7 @@ public class Game {
 
     public void setScoreUpdateListener(ScoreUpdateListener scoreUpdateListener) {
         this.scoreUpdateListener = scoreUpdateListener;
+        scoreUpdateListener.updateGoalScore(new ScoreUpdateEvent(this, goal));
     }
 
     public void fireScoreUpdateEvent(ScoreUpdateEvent event) {

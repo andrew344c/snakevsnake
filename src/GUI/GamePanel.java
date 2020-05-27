@@ -99,16 +99,14 @@ public class GamePanel extends JPanel implements ActionListener {
                     for (String player: event.getPlayers()) {
                         winners += player + " ";
                     }
-                    JLabel winLabel = new JLabel(winners + "won!", SwingConstants.CENTER);
-                    add(winLabel);
+                    displayGameEndWindow(winners + "won!");
                 }else if (event.getType() == GameStateEvent.TIE){
                     stop();
                     String tied = "";
                     for (String player: event.getPlayers()) {
                         tied += player + " ";
                     }
-                    JLabel tieLabel = new JLabel(tied + "tied!", SwingConstants.CENTER);
-                    add(tieLabel);
+                    displayGameEndWindow(tied + "tied!");
                 }
             }
         }); // Used for direct communication between server updates and gui
@@ -138,6 +136,19 @@ public class GamePanel extends JPanel implements ActionListener {
         }
     }
 
+    public void constructGameEndWindow(String text) {
+        JFrame window = new JFrame();
+        JLabel textLabel = new JLabel(text);
+        textLabel.setFont(new Font("Arial", Font.BOLD, 30));
+        window.add(textLabel);
+        window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        window.pack();
+        window.setVisible(true);
+    }
+
+    public void displayGameEndWindow(String text) {
+        EventQueue.invokeLater(() -> constructGameEndWindow(text));
+    }
     /**
      * Starts game loop and starts listening for keystrokes
      */

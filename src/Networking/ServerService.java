@@ -14,7 +14,6 @@ import java.util.*;
  */
 public class ServerService implements Runnable {
     private ServerSocket server;
-    private int PORT;
     private HashSet<ClientHandler> clients;
     private HashSet<String> playersAlive;
     private int maxPlayers;
@@ -28,6 +27,7 @@ public class ServerService implements Runnable {
     private int rows;
     private int cols;
     private int foodAmount;
+    private int goal;
 
     /**
      * ServerService Constructor
@@ -38,15 +38,15 @@ public class ServerService implements Runnable {
      * @param maxPlayers the maximum amount of players allowed
      * @throws IOException Error while creating server
      */
-    public ServerService(int rows, int cols, int foodAmount, int port, int maxPlayers) throws IOException {
+    public ServerService(int rows, int cols, int foodAmount, int maxPlayers, int goal, int port) throws IOException {
         this.maxPlayers = maxPlayers;
-        PORT = port;
-        server = new ServerSocket(PORT);
-        clients = new HashSet<ClientHandler>();
-        updatedCells = new HashMap<ClientHandler, ArrayList<Cell>>();
         this.rows = rows;
         this.cols = cols;
         this.foodAmount = foodAmount;
+        this.goal = goal;
+        server = new ServerSocket(port);
+        clients = new HashSet<ClientHandler>();
+        updatedCells = new HashMap<ClientHandler, ArrayList<Cell>>();
         playersAlive = new HashSet<String>();
         playersReady = 0;
         deadCells = new ArrayList<Cell>();
@@ -156,11 +156,12 @@ public class ServerService implements Runnable {
             clients.add(clientThread);
             playersAlive.add(clientThread.getName());
 
-            // Upon connection send client info about grid and spawn; also update other clients of this client
+            // Upon connection send client info about grid and spawn and required score; also update other clients of this client
             Cell spawn = possibleLocations.remove(rand.nextInt(possibleLocations.size()));
             spawn.setSnake(true);
             clientThread.send(grid);
             clientThread.send(spawn);
+            clientThread.send(goal);
             sendAll(spawn);
             new Thread(clientThread).start();   // Not using thread pool, since construction will only occur at start
         }
@@ -213,7 +214,7 @@ public class ServerService implements Runnable {
 
     public static void main(String[] args) throws IOException {
         Scanner scan = new Scanner(System.in);
-        ServerService server = new ServerService(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]),Integer.parseInt(args[3]), Integer.parseInt(args[4]));
+        ServerService server = new ServerService(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]),Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]));
         Thread serverThread = new Thread(server);
         serverThread.start();
         System.out.print(">");

@@ -7,8 +7,7 @@ import Networking.ServerConnectionListener;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 
 /**
  * Window for game
@@ -18,17 +17,26 @@ import java.awt.event.WindowEvent;
 public class GameWindow extends JFrame {
 
     private JLabel score;
-    private JLabel secondScore;
+    private String scoreInner;
+    private String goalScoreInner;
     private GamePanel gamePanel;
     private GameChatPanel gameChatPanel;
     private GridBagConstraints gc;
+    private MouseAdapter mouseAdapter;
 
 
     public void initialize() {
         setResizable(false);
         setLayout(new GridBagLayout());
         gc = new GridBagConstraints();
+        mouseAdapter = new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                ((JComponent)e.getSource()).requestFocusInWindow();
+            }
+        };
     }
+
 
     public GameWindow(String ip, int port, String name) {
         initialize();
@@ -41,13 +49,22 @@ public class GameWindow extends JFrame {
             }
         });
 
-
-        score = new JLabel("Score: 1");
+        scoreInner = "Score: 1";
+        goalScoreInner = "\nGoal: -1";
+        score = new JLabel(scoreInner + goalScoreInner);
         gamePanel = new GamePanel(ip, port, name);
+        gamePanel.addMouseListener(mouseAdapter);
         gamePanel.setScoreUpdateListener(new ScoreUpdateListener() {
             @Override
             public void scoreUpdateEventOccurred(ScoreUpdateEvent event) {
-                score.setText("Score: " + event.getNewScore());
+                scoreInner = "Score: " + event.getNewScore();
+                score.setText(scoreInner + goalScoreInner);
+            }
+
+            @Override
+            public void updateGoalScore(ScoreUpdateEvent event) {
+                goalScoreInner = "\nGoal: " + event.getNewScore();
+                score.setText(scoreInner + goalScoreInner);
             }
         });
         gamePanel.setChatListener(new ChatListener() {
@@ -93,12 +110,16 @@ public class GameWindow extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         gamePanel = new GamePanel(rows, cols);
+        gamePanel.addMouseListener(mouseAdapter);
         score = new JLabel("Score: 1");
         gamePanel.setScoreUpdateListener(new ScoreUpdateListener() {
             @Override
             public void scoreUpdateEventOccurred(ScoreUpdateEvent event) {
                 score.setText("Score: " + event.getNewScore());
             }
+
+            @Override
+            public void updateGoalScore(ScoreUpdateEvent ignored) {}
         });
 
         constructScore();
