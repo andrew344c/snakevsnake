@@ -5,12 +5,17 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-//something that i just made up quick for easier use
-//temporary
+/**
+ * Main menu
+ * @author Andrew
+ */
 public class MenuWindow extends JFrame {
 
     private GridBagConstraints gc;
 
+    /**
+     * Constructor
+     */
     public MenuWindow() {
         setLayout(new GridBagLayout());
         gc = new GridBagConstraints();
@@ -46,6 +51,9 @@ public class MenuWindow extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * Single player form
+     */
     public void constructSingleplayerForm() {
         gc.gridx = 0;
         gc.gridy = 0;
@@ -79,6 +87,9 @@ public class MenuWindow extends JFrame {
         add(submit, gc);
     }
 
+    /**
+     * Multiplayer form
+     */
     public void constructMultiplayerForm() {
         gc.gridx = 0;
         gc.gridy = 0;

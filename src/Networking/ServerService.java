@@ -16,7 +16,7 @@ public class ServerService implements Runnable {
     private ServerSocket server;
     private HashSet<ClientHandler> clients;
     private HashSet<String> playersAlive;
-    private int maxPlayers;
+    private int amountPlayers;
     private HashMap<ClientHandler, ArrayList<Cell>> updatedCells;
     private int playersReady;
     private ArrayList<Cell> deadCells;
@@ -28,6 +28,7 @@ public class ServerService implements Runnable {
     private int cols;
     private int foodAmount;
     private int goal;
+    private boolean autoDisconnect;
 
     /**
      * ServerService Constructor
@@ -35,15 +36,16 @@ public class ServerService implements Runnable {
      * @param cols the cols for the grid
      * @param foodAmount the amount of food to be generated
      * @param port the port the server is hosted on
-     * @param maxPlayers the maximum amount of players allowed
+     * @param amountPlayers the maximum amount of players allowed
      * @throws IOException Error while creating server
      */
-    public ServerService(int rows, int cols, int foodAmount, int maxPlayers, int goal, int port) throws IOException {
-        this.maxPlayers = maxPlayers;
+    public ServerService(int rows, int cols, int foodAmount, int amountPlayers, int goal, int port, boolean autoDisconnect) throws IOException {
+        this.amountPlayers = amountPlayers;
         this.rows = rows;
         this.cols = cols;
         this.foodAmount = foodAmount;
         this.goal = goal;
+        this.autoDisconnect = autoDisconnect;
         server = new ServerSocket(port);
         clients = new HashSet<ClientHandler>();
         updatedCells = new HashMap<ClientHandler, ArrayList<Cell>>();
@@ -55,10 +57,18 @@ public class ServerService implements Runnable {
         started = false;
     }
 
+    /**
+     * Player wins
+     * @param player wins the game
+     */
     public synchronized void playerWin(ClientHandler player) {
         playersWon.add(player.getName());
     }
 
+    /**
+     * PLayer loses
+     * @param player loses the game
+     */
     public synchronized void playerLose(ClientHandler player) {
         playersLost.add(player.getName());
         deadCells.addAll(updatedCells.get(player));
@@ -66,6 +76,9 @@ public class ServerService implements Runnable {
         playersAlive.remove(player.getName());
     }
 
+    /**
+     * A player is ready to receive updates and has already sent their updated cells
+     */
     public synchronized void playerReady() {
         playersReady++;
         if (playersReady == playersAlive.size()) {
@@ -74,6 +87,10 @@ public class ServerService implements Runnable {
         }
     }
 
+    /**
+     * Removes client
+     * @param client to be removed
+     */
     public synchronized void removeClient(ClientHandler client) {
         if (started) {
             playerLose(client);
@@ -81,10 +98,19 @@ public class ServerService implements Runnable {
         clients.remove(client);
     }
 
+    /**
+     * Adds updated cells from a client
+     * @param player player that updated cells
+     * @param update the updated cells that they sent over
+     */
     public synchronized void addUpdate(ClientHandler player, ArrayList<Cell> update) {
         updatedCells.put(player, update);
     }
 
+    /**
+     * Send to all clients
+     * @param obj to be sent
+     */
     public synchronized void sendAll(Object obj) {
         for (ClientHandler client: clients) {
             client.send(obj);
@@ -116,8 +142,9 @@ public class ServerService implements Runnable {
     }
 
     /**
-     * Initially listen for clients till "start" command
+     * Listen for clients till the amount of players is reached then starts the game
      * During game, wait for every player to send their updated cells and then send those updated cells to all other players
+     * At end of game doesn't auto shut down server (unless autoDisconnect is set to true) to allow players to chat
      */
     @Override
     public void run() {
@@ -135,7 +162,7 @@ public class ServerService implements Runnable {
         }
 
         // Listen for new client connections and handle appropriately
-        while (clients.size() < maxPlayers) {
+        while (clients.size() < amountPlayers) {
             System.out.println("Waiting for connection...");
             Socket client = null;
             try {
@@ -149,9 +176,10 @@ public class ServerService implements Runnable {
             try {
                 clientThread = new ClientHandler(client, this);
             } catch (IOException e) {
-
+                continue;
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
+                continue;
             }
             clients.add(clientThread);
             playersAlive.add(clientThread.getName());
@@ -206,21 +234,51 @@ public class ServerService implements Runnable {
                 }
             }
         }
+
+        if (autoDisconnect) {
+            disconnectAll();
+            System.exit(0);
+        }
     }
 
-    public void start() {
-
+    /**
+     * Disconnects all clients connected
+     */
+    public void disconnectAll() {
+        for (ClientHandler client: clients) {
+            client.disconnect();
+        }
     }
 
+    /**
+     * Main
+     * @param args no command line args are used
+     * @throws IOException Error in forming server
+     */
     public static void main(String[] args) throws IOException {
         Scanner scan = new Scanner(System.in);
-        ServerService server = new ServerService(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]),Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]));
+        System.out.print("Rows: ");
+        int rows = scan.nextInt();
+        System.out.print("Cols: ");
+        int cols = scan.nextInt();
+        System.out.print("Amount of Food: ");
+        int food = scan.nextInt();
+        System.out.print("Amount of players: ");
+        int players = scan.nextInt();
+        System.out.print("Goal: ");
+        int goal = scan.nextInt();
+        System.out.print("Port to be hosted on: ");
+        int port = scan.nextInt();
+        System.out.print("Automatically shut down server after game? (y or n)");
+        boolean autoDisconnect = scan.next().equalsIgnoreCase("y");
+        System.out.println("Note: To shut down the server at any time, enter 'stop' in stdin");
+
+        ServerService server = new ServerService(rows, cols, food, players, goal, port, autoDisconnect);
         Thread serverThread = new Thread(server);
         serverThread.start();
-        System.out.print(">");
-        String cmd = scan.next();
-        if (cmd.equalsIgnoreCase("start")) {
-            server.start();
+        if (scan.next().equalsIgnoreCase("stop")) {
+            server.disconnectAll();
+            System.exit(0);
         }
     }
 }

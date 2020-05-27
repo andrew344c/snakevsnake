@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.EventObject;
 
+/**
+ * A event symbolizing a change in the state of the game (win, lose, tie)
+ */
 public class GameStateEvent extends EventObject implements Serializable {
 
     private int type;   // Type of special event
@@ -17,19 +20,36 @@ public class GameStateEvent extends EventObject implements Serializable {
     public static final int TIE = 4;
     public static final int READY = 5;
 
+    /**
+     * Constructor
+     * @param source caller of event
+     * @param type type of Game State Event
+     */
     public GameStateEvent(Object source, int type) {
         super(source);
         this.type = type;
     }
 
+    /**
+     * Gets type of game state event
+     * @return type the type of event it is
+     */
     public int getType() {
         return type;
     }
 
+    /**
+     * Set players in accordance to event
+     * @param players only used in tie and win
+     */
     public void setPlayers(ArrayList<String> players) {
         this.players = players;
     }
 
+    /**
+     * Gets player in accordance to event
+     * @return players that won/tied
+     */
     public ArrayList<String> getPlayers() {
         return players;
     }

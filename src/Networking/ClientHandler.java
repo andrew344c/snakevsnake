@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 
 /**
- * Handler for client
+ * Handler for each individual client connected to server
  *
  * @author Andrew
  */
@@ -23,6 +23,13 @@ public class ClientHandler implements Runnable {
     private String clientName;
 
 
+    /**
+     * Constructor
+     * @param client client connected
+     * @param server server client is connected to
+     * @throws IOException Client suddenly disconnects (shouldn't happen if client exits correctly)
+     * @throws ClassNotFoundException Unexpected Exception
+     */
     public ClientHandler(Socket client, ServerService server) throws IOException, ClassNotFoundException {
         this.client = client;
         this.server = server;
@@ -31,8 +38,11 @@ public class ClientHandler implements Runnable {
         clientName = (String)in.readObject();
     }
 
+    /**
+     * Sends object over to client
+     * @param obj object to be sent
+     */
     public void send(Object obj) {
-        System.out.println(obj.toString());
         try {
             out.writeObject(obj);
             out.reset();
@@ -41,6 +51,17 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Disconnects client from server
+     */
+    public void disconnect() {
+        send(new ServerConnectionEvent(this, ServerConnectionEvent.EXPECTED_DISCONNECT));
+    }
+
+    /**
+     * Gets name of client
+     * @return name the name of the client
+     */
     public String getName() {
         return clientName;
     }
@@ -52,7 +73,6 @@ public class ClientHandler implements Runnable {
      */
     public void receive() throws IOException, ClassNotFoundException {
         Object msg = in.readObject();   // Receive Object
-        System.out.println("Received: " + msg.toString() + " From: " + client.toString());
         if (msg instanceof ChatEvent) { //Chat Message
             server.sendAll(msg);
         } else if (msg instanceof GameStateEvent) {    // Either Lose or Win
@@ -64,14 +84,14 @@ public class ClientHandler implements Runnable {
             } else if (event.getType() == GameStateEvent.WIN) {
                 server.playerWin(this);
             }
-        }else if (msg instanceof ArrayList){
+        }else if (msg instanceof ArrayList){    // Updated cells
             if (!server.hasStarted()) { // This means the client disconnected before the game started and is sending dead spawn
                 server.sendAll(((ArrayList<Cell>) msg).get(0));
             }else {
                 ArrayList<Cell> update = (ArrayList<Cell>) msg;
                 server.addUpdate(this, update);
             }
-        }else if (msg instanceof ServerConnectionEvent) {
+        }else if (msg instanceof ServerConnectionEvent) {   // Client disconnects
             throw new IOException();
         } else {
             throw new ClassNotFoundException(msg.getClass().toString());
@@ -92,6 +112,7 @@ public class ClientHandler implements Runnable {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();    // Shouldn't happen
         } finally {
+            // Cleanup client
             server.removeClient(this);
             try {
                 in.close();

@@ -29,7 +29,7 @@ public class GamePanel extends JPanel implements ActionListener {
     private KeyAdapter keyListener;
 
     private static final int CELL_SIZE = 25;
-    private static final Color BACKGROUND_COLOR = Color.WHITE;
+    private static final Color BACKGROUND_COLOR = Color.BLACK;
 
     private final ImageIcon body = new ImageIcon("resources/snakeBody.png");
     private final ImageIcon headDown = new ImageIcon("resources/snakeDown.png");
@@ -93,6 +93,7 @@ public class GamePanel extends JPanel implements ActionListener {
                     start();
                 }else if (event.getType() == GameStateEvent.LOST) {
                     stop();
+                    game.spectateMode();
                 }else if (event.getType() == GameStateEvent.WIN) {
                     stop();
                     String winners = "";

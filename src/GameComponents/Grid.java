@@ -14,6 +14,11 @@ public class Grid implements Serializable {
 
     private Cell[][] grid;
 
+    /**
+     * Constructor
+     * @param rows rows for Grid
+     * @param cols cols for Grid
+     */
     public Grid(int rows, int cols) {
         grid = new Cell[rows][cols];
         for (int i = 0; i < rows; i++) {
@@ -33,10 +38,6 @@ public class Grid implements Serializable {
 
     public int getCols() {
         return grid[0].length;
-    }
-
-    public boolean inGrid(int x, int y) {
-        return x >= 0 && x < grid[0].length && y >= 0 && y < grid.length;
     }
 
     /**

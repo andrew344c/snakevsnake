@@ -47,6 +47,13 @@ public class Game {
         updatedCells.add(grid.generateFood());
     }
 
+    /**
+     * Multi-player constructor
+     *
+     * @param ip    ip of server
+     * @param port  port of server
+     * @param name  name to be displayed
+     */
     public Game(String ip, int port, String name) {
         lost = false;
         updatedCells = new ArrayList<Cell>();
@@ -67,6 +74,9 @@ public class Game {
         }
     }
 
+    /**
+     * Start continuously listening for server messages
+     */
     public void startListening() {
         serverThread = new Thread(server);
         serverThread.start();
@@ -82,11 +92,20 @@ public class Game {
         return temp;
     }
 
+    /**
+     * Called when key is pressed
+     * @param e key-press
+     */
     public void keyPressed(KeyEvent e) {
         player.keyPressed(e);
     }
 
 
+    /**
+     * Resembles a "tick" in the game
+     * Moves snake, updates cell, sends updates to server, receives updates from server during this tick
+     * @throws InterruptedException only used in single player: resembles end of single-player game
+     */
     public void update() throws InterruptedException {
         // Update snake body (Will also update tail in grid directly in update call, but head will not be updated in grid)
         try {
@@ -158,18 +177,34 @@ public class Game {
         }
     }
 
+    /**
+     * Gets rows
+     * @return rows of grid
+     */
     public int getRows() {
         return grid.getRows();
     }
 
+    /**
+     * Get cols
+     * @return cols of grid
+     */
     public int getCols() {
         return grid.getCols();
     }
 
+    /**
+     * Used in ClientService
+     * Notifies game that update is ready and to stop waiting
+     */
     public synchronized void updateReady() {
         this.notify();
     }
 
+    /**
+     * Waits for and Accepts an update from ClientService
+     * @throws InterruptedException interruption in thread waiting
+     */
     public void acceptUpdate() throws InterruptedException{
         // Wait for update from server
         ArrayList<Cell> update = server.getUpdate();
@@ -187,31 +222,58 @@ public class Game {
         }
     }
 
+    /**
+     * Sets score listener
+     * @param scoreUpdateListener listens for updates in the score and sends to GUI
+     */
     public void setScoreUpdateListener(ScoreUpdateListener scoreUpdateListener) {
         this.scoreUpdateListener = scoreUpdateListener;
         scoreUpdateListener.updateGoalScore(new ScoreUpdateEvent(this, goal));
     }
 
+    /**
+     * Fires score update event
+     * @param event a update in the score
+     */
     public void fireScoreUpdateEvent(ScoreUpdateEvent event) {
         scoreUpdateListener.scoreUpdateEventOccurred(event);
     }
 
+    /**
+     * Merely passes along listener from GUI to ClientService
+     * @param chatListener listener for chat
+     */
     public void setChatListener(ChatListener chatListener) {
         server.setChatListener(chatListener);
     }
 
+    /**
+     * Merely passes along listener from GUI to ClientService
+     * @param serverListener listens for server updates
+     */
     public void setUpdateListener(ServerListener serverListener) {
         server.setServerListener(serverListener);
     }
 
+    /**
+     * Merely passes along listener from GUI to ClientService
+     * @param serverConnectionListener listens for changes in connection
+     */
     public void setServerConnectionListener(ServerConnectionListener serverConnectionListener) {
         server.setServerConnectionListener(serverConnectionListener);
     }
 
+    /**
+     * Send chat over to server
+     * @param event chat to be sent
+     */
     public void sendChat(ChatEvent event) {
         server.sendChat(event);
     }
 
+    /**
+     * Disconnect from server
+     */
     public void disconnect() {
         server.disconnect(player.killSnake());
     }

@@ -25,6 +25,9 @@ public class GameWindow extends JFrame {
     private MouseAdapter mouseAdapter;
 
 
+    /**
+     * Initialize GUI
+     */
     public void initialize() {
         setResizable(false);
         setLayout(new GridBagLayout());
@@ -37,7 +40,35 @@ public class GameWindow extends JFrame {
         };
     }
 
+    /**
+     * Construct text window
+     * @param text to use
+     */
+    public void constructTextWindow(String text) {
+        JFrame window = new JFrame();
+        JLabel textLabel = new JLabel(text);
+        textLabel.setFont(new Font("Arial", Font.BOLD, 30));
+        window.add(textLabel);
+        window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        window.pack();
+        window.setVisible(true);
+    }
 
+    /**
+     * Displays text window
+     * @param text to use
+     */
+    public void displayTextWindow(String text) {
+        EventQueue.invokeLater(() -> constructTextWindow(text));
+    }
+
+
+    /**
+     * Constructor
+     * @param ip server
+     * @param port server
+     * @param name display name
+     */
     public GameWindow(String ip, int port, String name) {
         initialize();
         addWindowListener(new WindowAdapter() {
@@ -78,12 +109,13 @@ public class GameWindow extends JFrame {
             @Override
             public void connectionEventOccurred(ServerConnectionEvent event) {
                 if (event.getType() == ServerConnectionEvent.EXPECTED_DISCONNECT) {
-
+                    displayTextWindow("Disconnected from server.");
                 } else if (event.getType() == ServerConnectionEvent.UNEXPECTED_DISCONNECT) {
-
+                    displayTextWindow("Your connection with the server was disrupted.");
                 } else if (event.getType() == ServerConnectionEvent.UNSUCCESSFUL_CONNECTION_ATTEMPT) {
-
+                    displayTextWindow("The server doesn't exist or there was an error with your network.");
                 }
+                dispose();
             }
         });
         gameChatPanel = new GameChatPanel(gamePanel.getPreferredSize());
@@ -105,6 +137,11 @@ public class GameWindow extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * Single player constructor
+     * @param rows
+     * @param cols
+     */
     public GameWindow(int rows, int cols) {
         initialize();
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -128,6 +165,9 @@ public class GameWindow extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * Constructs score label
+     */
     public void constructScore() {
         gc.anchor = GridBagConstraints.LINE_START;
         gc.gridx = 0;
@@ -135,6 +175,9 @@ public class GameWindow extends JFrame {
         add(score, gc);
     }
 
+    /**
+     * Constructs game panel
+     */
     public void constructGamePanel() {
         gc.gridx = 0;
         gc.gridy = 1;

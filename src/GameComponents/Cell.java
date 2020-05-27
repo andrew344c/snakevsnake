@@ -21,6 +21,11 @@ public class Cell implements Serializable {
     private int x;
     private int y;
 
+    /**
+     * Constructor
+     * @param x x location
+     * @param y y location
+     */
     public Cell(int x, int y) {
         this.x = x;
         this.y = y;

@@ -5,12 +5,19 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+/**
+ * Chat Panel for Game
+ */
 public class GameChatPanel extends JPanel {
 
     private JTextArea chatPane;
     private JTextField chatField;
     private SendMessageListener sendMessageListener;
 
+    /**
+     * Constructor
+     * @param gamePanelDimension Dimension of game panel
+     */
     public GameChatPanel(Dimension gamePanelDimension) {
         setLayout(new GridBagLayout());
         GridBagConstraints gc = new GridBagConstraints();
@@ -49,10 +56,18 @@ public class GameChatPanel extends JPanel {
         add(sendButton, gc);
     }
 
+    /**
+     * Adds to chat
+     * @param msg to be added
+     */
     public void addToChat(String msg) {
         chatPane.append(msg);
     }
 
+    /**
+     * Set listener
+     * @param sendMessageListener for direct communication to ClientService
+     */
     public void setSendMessageListener(SendMessageListener sendMessageListener) {
         this.sendMessageListener = sendMessageListener;
     }

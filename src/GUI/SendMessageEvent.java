@@ -2,6 +2,9 @@ package GUI;
 
 import java.util.EventObject;
 
+/**
+ * Used when user sends a message
+ */
 public class SendMessageEvent extends EventObject {
 
     private String sentMsg;
